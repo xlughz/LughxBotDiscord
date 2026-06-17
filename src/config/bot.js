@@ -22,15 +22,16 @@ export const botConfig = {
     // 3 = Watching
     // 4 = Custom
     // 5 = Competing
-    activities: [
-      {
-        // Text users will see (example: "Playing /help | Titan Bot").
-        name: "Lughx đang ngủ...",
-        // Activity type number (0 = Playing).
-        type: 0, 
-      },
-    ],
-  },
+status: 'idle', // Thêm dòng này (idle = hình mặt trăng màu vàng)
+  activities: [
+    {
+      // Text users will see (example: "Playing /help | Titan Bot").
+      name: "Lughx đang ngủ mấy em ơi:)",
+      // Activity type number (0 = Playing).
+      type: 0, 
+    },
+  ],
+},
 
   // =========================
   // COMMAND BEHAVIOR
