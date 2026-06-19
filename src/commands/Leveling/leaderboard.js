@@ -1,26 +1,15 @@
-
-
-
-
-
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError, LughxBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { getLeaderboard, getLevelingConfig, getXpForLevel } from '../../services/leveling.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
-    .setDescription("Shows the server's level leaderboard")
+    .setDescription('Hiển thị bảng xếp hạng cấp độ của máy chủ')
     .setDMPermission(false),
   category: 'Leveling',
-
-  
-
-
-
-
 
   async execute(interaction, config, client) {
     try {
@@ -33,7 +22,7 @@ export default {
           embeds: [
             new EmbedBuilder()
               .setColor('#f1c40f')
-              .setDescription('The leveling system is currently disabled on this server.')
+              .setDescription('Hệ thống cấp độ hiện đang bị tắt trên máy chủ này.')
           ],
           flags: MessageFlags.Ephemeral
         });
@@ -46,14 +35,14 @@ export default {
         throw new LughxBotError(
           'No leaderboard data found',
           ErrorTypes.DATABASE,
-          'No level data found yet. Start chatting to gain XP!'
+          'Chưa có dữ liệu cấp độ trên hệ thống. Hãy bắt đầu trò chuyện để tích lũy XP nhé!'
         );
       }
 
       const embed = new EmbedBuilder()
-        .setTitle('🏆 Level Leaderboard')
+        .setTitle('🏆 Bảng Xếp Hạng Cấp Độ')
         .setColor('#2ecc71')
-        .setDescription("Top 10 most active members in this server:")
+        .setDescription('Top 10 thành viên hoạt động tích cực nhất máy chủ:')
         .setTimestamp();
 
       const leaderboardText = await Promise.all(
@@ -69,15 +58,15 @@ export default {
             else if (index === 2) rankPrefix = '🥉';
             else rankPrefix = `**${index + 1}.**`;
 
-            return `${rankPrefix} ${userMention} - Level ${user.level} (${user.xp}/${xpForNextLevel} XP)`;
+            return `${rankPrefix} ${userMention} - Cấp ${user.level} (${user.xp}/${xpForNextLevel} XP)`;
           } catch {
-            return `**${index + 1}.** Error loading user ${user.userId}`;
+            return `**${index + 1}.** Lỗi khi tải dữ liệu người dùng ${user.userId}`;
           }
         })
       );
 
       embed.addFields({
-        name: 'Rankings',
+        name: 'Thứ hạng',
         value: leaderboardText.join('\n')
       });
 
@@ -92,6 +81,3 @@ export default {
     }
   }
 };
-
-
-
