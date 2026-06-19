@@ -1,32 +1,21 @@
-
-
-
-
-
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError, LughxBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { getUserLevelData, getLevelingConfig, getXpForLevel } from '../../services/leveling.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
   data: new SlashCommandBuilder()
     .setName('rank')
-    .setDescription("Check your or another user's rank and level")
+    .setDescription('Kiểm tra thứ hạng và cấp độ của bạn hoặc của thành viên khác')
     .addUserOption((option) =>
       option
         .setName('user')
-        .setDescription('The user to check the rank of')
+        .setDescription('Thành viên bạn muốn kiểm tra thứ hạng')
         .setRequired(false)
     )
     .setDMPermission(false),
   category: 'Leveling',
-
-  
-
-
-
-
 
   async execute(interaction, config, client) {
     try {
@@ -38,7 +27,7 @@ export default {
           embeds: [
             new EmbedBuilder()
               .setColor('#f1c40f')
-              .setDescription('The leveling system is currently disabled on this server.')
+              .setDescription('Hệ thống cấp độ hiện đang bị tắt trên máy chủ này.')
           ],
           flags: MessageFlags.Ephemeral
         });
@@ -54,7 +43,7 @@ export default {
         throw new LughxBotError(
           `User ${targetUser.id} not found in guild`,
           ErrorTypes.USER_INPUT,
-          'Could not find the specified user in this server.'
+          'Không thể tìm thấy thành viên được chỉ định trong máy chủ này.'
         );
       }
 
@@ -71,26 +60,26 @@ export default {
       const progressBar = createProgressBar(progress, 20);
 
       const embed = new EmbedBuilder()
-        .setTitle(`${member.displayName}'s Rank`)
+        .setTitle(`Thứ hạng của ${member.displayName}`)
         .setThumbnail(member.displayAvatarURL({ dynamic: true }))
         .addFields(
           {
-            name: '📊 Level',
+            name: '📊 Cấp độ',
             value: safeUserData.level.toString(),
             inline: true
           },
           {
-            name: '⭐ XP',
+            name: '⭐ XP hiện tại',
             value: `${safeUserData.xp}/${xpNeeded}`,
             inline: true
           },
           {
-            name: '✨ Total XP',
+            name: '✨ Tổng XP',
             value: safeUserData.totalXp.toString(),
             inline: true
           },
           {
-            name: `Progress to Level ${safeUserData.level + 1}`,
+            name: `Tiến trình đạt Cấp ${safeUserData.level + 1}`,
             value: `${progressBar} ${progress}%`
           }
         )
@@ -109,12 +98,6 @@ export default {
   }
 };
 
-
-
-
-
-
-
 function createProgressBar(percentage, length = 10) {
   if (percentage < 0 || percentage > 100) {
     percentage = Math.max(0, Math.min(100, percentage));
@@ -122,6 +105,3 @@ function createProgressBar(percentage, length = 10) {
   const filled = Math.round((percentage / 100) * length);
   return '█'.repeat(filled) + '░'.repeat(length - filled);
 }
-
-
-

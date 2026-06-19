@@ -1,30 +1,25 @@
-
-
-
-
-
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, MessageFlags } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError, LughxBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { checkUserPermissions } from '../../utils/permissionGuard.js';
 import { addLevels, getLevelingConfig } from '../../services/leveling.js';
 import { createEmbed } from '../../utils/embeds.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
   data: new SlashCommandBuilder()
     .setName('leveladd')
-    .setDescription('Add levels to a user')
+    .setDescription('Cộng thêm cấp độ (level) cho một thành viên')
     .addUserOption((option) =>
       option
         .setName('user')
-        .setDescription('The user to add levels to')
+        .setDescription('Thành viên bạn muốn cộng thêm cấp độ')
         .setRequired(true)
     )
     .addIntegerOption((option) =>
       option
         .setName('levels')
-        .setDescription('Number of levels to add')
+        .setDescription('Số cấp độ muốn cộng thêm')
         .setRequired(true)
         .setMinValue(1)
     )
@@ -32,21 +27,14 @@ export default {
     .setDMPermission(false),
   category: 'Leveling',
 
-  
-
-
-
-
-
   async execute(interaction, config, client) {
     try {
       await InteractionHelper.safeDefer(interaction);
 
-      
       const hasPermission = await checkUserPermissions(
         interaction,
         PermissionFlagsBits.ManageGuild,
-        'You need ManageGuild permission to use this command.'
+        'Bạn cần có quyền Quản lý Máy chủ (ManageGuild) để sử dụng lệnh này.'
       );
       if (!hasPermission) return;
 
@@ -56,7 +44,7 @@ export default {
           embeds: [
             new EmbedBuilder()
               .setColor('#f1c40f')
-              .setDescription('The leveling system is currently disabled on this server.')
+              .setDescription('Hệ thống cấp độ hiện đang bị tắt trên máy chủ này.')
           ],
           flags: MessageFlags.Ephemeral
         });
@@ -66,24 +54,22 @@ export default {
       const targetUser = interaction.options.getUser('user');
       const levelsToAdd = interaction.options.getInteger('levels');
 
-      
       const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
       if (!member) {
         throw new LughxBotError(
           `User ${targetUser.id} not found in this guild`,
           ErrorTypes.USER_INPUT,
-          'The specified user is not in this server.'
+          'Thành viên được chỉ định không có trong máy chủ này.'
         );
       }
 
-      
       const userData = await addLevels(client, interaction.guildId, targetUser.id, levelsToAdd);
 
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [
           createEmbed({
-            title: '✅ Levels Added',
-            description: `Successfully added ${levelsToAdd} levels to ${targetUser.tag}.\n**New Level:** ${userData.level}`,
+            title: '✅ Đã Cộng Cấp Độ',
+            description: `Đã cộng thêm thành công **${levelsToAdd}** cấp độ cho ${targetUser.tag}.\n**Cấp độ mới:** ${userData.level}`,
             color: 'success'
           })
         ]
@@ -101,5 +87,3 @@ export default {
     }
   }
 };
-
-
