@@ -4,8 +4,8 @@ import { getAllBirthdays } from '../../../services/birthdayService.js';
 import { deleteBirthday } from '../../../utils/database.js';
 import { logger } from '../../../utils/logger.js';
 import { handleInteractionError } from '../../../utils/errorHandler.js';
-
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+
 export default {
     async execute(interaction, config, client) {
         try {
@@ -13,25 +13,25 @@ export default {
 
             const guildId = interaction.guildId;
             
-            
+            // Lấy toàn bộ danh sách sinh nhật đã sắp xếp
             const sortedBirthdays = await getAllBirthdays(client, guildId);
 
             if (sortedBirthdays.length === 0) {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [createEmbed({
-                        title: '❌ No Birthdays',
-                        description: 'No birthdays have been set in this server yet.',
+                        title: '❌ Không Có Dữ Liệu',
+                        description: 'Chưa có thành viên nào thiết lập ngày sinh nhật trên máy chủ này.',
                         color: 'error'
                     })]
                 });
             }
 
             const embed = createEmbed({
-                title: "🎂 Server Birthdays",
+                title: "🎂 Danh Sách Sinh Nhật Máy Chủ",
                 color: 'info'
             });
 
-            // Batch fetch to verify which users are still in the guild
+            // Lấy hàng loạt thành viên để xác minh xem ai còn trong máy chủ
             const userIds = sortedBirthdays.map(b => b.userId);
             const fetchedMembers = await interaction.guild.members.fetch({ user: userIds }).catch(() => null);
 
@@ -45,10 +45,10 @@ export default {
                     continue;
                 }
                 displayIndex++;
-                birthdayList += `${displayIndex}. <@${birthday.userId}> - ${birthday.monthName} ${birthday.day}\n`;
+                birthdayList += `${displayIndex}. <@${birthday.userId}> - Tháng ${birthday.monthName} ngày ${birthday.day}\n`;
             }
 
-            // Clean up birthday entries for members who left the server
+            // Dọn dẹp dữ liệu sinh nhật của những thành viên đã rời máy chủ
             if (fetchedMembers && staleUserIds.length > 0) {
                 for (const userId of staleUserIds) {
                     deleteBirthday(client, guildId, userId).catch(() => null);
@@ -58,17 +58,17 @@ export default {
             if (displayIndex === 0) {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [createEmbed({
-                        title: '❌ No Birthdays',
-                        description: 'No birthdays have been set by current server members.',
+                        title: '❌ Không Có Dữ Liệu',
+                        description: 'Không có ngày sinh nhật nào được thiết lập bởi các thành viên hiện tại.',
                         color: 'error'
                     })]
                 });
             }
 
-            birthdayList = `**${displayIndex} birthday${displayIndex !== 1 ? 's' : ''} in ${interaction.guild.name}**\n\n` + birthdayList;
+            birthdayList = `**Có ${displayIndex} ngày sinh nhật trong máy chủ ${interaction.guild.name}**\n\n` + birthdayList;
 
             embed.setDescription(birthdayList);
-            embed.setFooter({ text: `Total: ${displayIndex} birthday${displayIndex !== 1 ? 's' : ''}` });
+            embed.setFooter({ text: `Tổng cộng: ${displayIndex} ngày sinh nhật` });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
             
@@ -94,6 +94,3 @@ export default {
         }
     }
 };
-
-
-

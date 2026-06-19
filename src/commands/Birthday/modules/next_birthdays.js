@@ -4,22 +4,22 @@ import { getUpcomingBirthdays } from '../../../services/birthdayService.js';
 import { deleteBirthday } from '../../../utils/database.js';
 import { logger } from '../../../utils/logger.js';
 import { handleInteractionError } from '../../../utils/errorHandler.js';
-
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+
 export default {
     async execute(interaction, config, client) {
         try {
             await InteractionHelper.safeDefer(interaction);
             
-            
+            // Lấy danh sách 5 sinh nhật sắp tới
             const next5 = await getUpcomingBirthdays(client, interaction.guildId, 5);
 
             if (next5.length === 0) {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         createEmbed({
-                            title: '❌ No Birthdays Found',
-                            description: 'No birthdays have been set up in this server yet. Use `/birthday set` to add birthdays!',
+                            title: '❌ Không Tìm Thấy Ngày Sinh',
+                            description: 'Chưa có ngày sinh nhật nào được thiết lập trên máy chủ này. Hãy dùng lệnh `/birthday set` để thêm nhé!',
                             color: 'error'
                         })
                     ]
@@ -27,8 +27,8 @@ export default {
             }
 
             const embed = createEmbed({
-                title: '🎂 Next 5 Upcoming Birthdays',
-                description: `Here are the next 5 birthdays in ${interaction.guild.name}:`,
+                title: '🎂 5 Ngày Sinh Nhật Sắp Tới',
+                description: `Dưới đây là 5 ngày sinh nhật tiếp theo trong máy chủ ${interaction.guild.name}:`,
                 color: 'info'
             });
 
@@ -43,16 +43,16 @@ export default {
 
                 let timeUntil = '';
                 if (birthday.daysUntil === 0) {
-                    timeUntil = '🎉 **Today!**';
+                    timeUntil = '🎉 **Hôm nay!**';
                 } else if (birthday.daysUntil === 1) {
-                    timeUntil = '📅 **Tomorrow!**';
+                    timeUntil = '📅 **Ngày mai!**';
                 } else {
-                    timeUntil = `In ${birthday.daysUntil} day${birthday.daysUntil > 1 ? 's' : ''}`;
+                    timeUntil = `Còn ${birthday.daysUntil} ngày nữa`;
                 }
 
                 embed.addFields({
                     name: `${displayIndex}. ${member.displayName}`,
-                    value: `<@${birthday.userId}>\n📅 **Date:** ${birthday.monthName} ${birthday.day}\n⏰ **Time:** ${timeUntil}`,
+                    value: `<@${birthday.userId}>\n📅 **Ngày sinh:** Tháng ${birthday.monthName} ngày ${birthday.day}\n⏰ **Thời gian:** ${timeUntil}`,
                     inline: false
                 });
             }
@@ -61,8 +61,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         createEmbed({
-                            title: '❌ No Upcoming Birthdays',
-                            description: 'No upcoming birthdays found for current server members.',
+                            title: '❌ Không Có Sinh Nhật Sắp Tới',
+                            description: 'Không tìm thấy ngày sinh nhật sắp tới nào từ các thành viên hiện tại.',
                             color: 'error'
                         })
                     ]
@@ -70,7 +70,7 @@ export default {
             }
 
             embed.setFooter({
-                text: 'Use /birthday set to add your birthday!',
+                text: 'Sử dụng lệnh /birthday set để thêm ngày sinh nhật của bạn!',
                 iconURL: interaction.guild.iconURL()
             });
 
@@ -97,6 +97,3 @@ export default {
         }
     }
 };
-
-
-

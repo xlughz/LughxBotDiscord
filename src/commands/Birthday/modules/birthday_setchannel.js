@@ -8,7 +8,10 @@ export default {
     async execute(interaction, config, client) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
             return InteractionHelper.safeReply(interaction, {
-                embeds: [errorEmbed('Permission Denied', 'You need **Manage Server** permissions to configure the birthday channel.')],
+                embeds: [errorEmbed(
+                    'Từ Chối Quyền Hạn', 
+                    'Bạn cần có quyền **Quản lý Máy chủ** để cấu hình kênh thông báo sinh nhật.'
+                )],
                 flags: MessageFlags.Ephemeral,
             });
         }
@@ -22,21 +25,30 @@ export default {
                 guildConfig.birthdayChannelId = channel.id;
                 await setGuildConfig(client, guildId, guildConfig);
                 return InteractionHelper.safeReply(interaction, {
-                    embeds: [successEmbed('🎂 Birthday Announcements Enabled', `Birthday announcements will now be posted in ${channel}.`)],
+                    embeds: [successEmbed(
+                        '🎂 Đã Bật Thông Báo Sinh Nhật', 
+                        `Các thông báo chúc mừng sinh nhật từ bây giờ sẽ được gửi vào kênh ${channel}.`
+                    )],
                     flags: MessageFlags.Ephemeral,
                 });
             } else {
                 guildConfig.birthdayChannelId = null;
                 await setGuildConfig(client, guildId, guildConfig);
                 return InteractionHelper.safeReply(interaction, {
-                    embeds: [successEmbed('🎂 Birthday Announcements Disabled', 'No channel provided — birthday announcements have been disabled.')],
+                    embeds: [successEmbed(
+                        '🎂 Đã Tắt Thông Báo Sinh Nhật', 
+                        'Không có kênh nào được chỉ định — tính năng thông báo sinh nhật đã bị tắt.'
+                    )],
                     flags: MessageFlags.Ephemeral,
                 });
             }
         } catch (error) {
             logger.error('birthday_setchannel error:', error);
             return InteractionHelper.safeReply(interaction, {
-                embeds: [errorEmbed('Configuration Error', 'Could not save the birthday channel configuration.')],
+                embeds: [errorEmbed(
+                    'Lỗi Cấu Hình', 
+                    'Không thể lưu cấu hình kênh thông báo sinh nhật vào hệ thống.'
+                )],
                 flags: MessageFlags.Ephemeral,
             });
         }
