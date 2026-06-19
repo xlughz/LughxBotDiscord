@@ -1,7 +1,7 @@
 services:
   bot:
     build: .
-    container_name: titanbot
+    container_name: LughxBot
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -18,12 +18,12 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: titanbot-db
+    container_name: LughxBot-db
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-titanbot}
+      - POSTGRES_USER=${POSTGRES_USER:-LughxBot}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
-      - POSTGRES_DB=${POSTGRES_DB:-titanbot}
+      - POSTGRES_DB=${POSTGRES_DB:-LughxBot}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
