@@ -301,19 +301,23 @@ class LughxBot extends Client {
 
 async registerCommands() {
     try {
-      // --- ĐOẠN CODE XÓA LỆNH TẠM THỜI ---
-      startupLog('🔄 [Railway Clear] Đang tiến hành xóa sạch lệnh cũ...');
+    //   // --- ĐOẠN CODE XÓA LỆNH TẠM THỜI ---
+    //   startupLog('🔄 [Railway Clear] Đang tiến hành xóa sạch lệnh cũ...');
       
-      if (this.config.bot.guildId) {
-        await this.rest.put(Routes.applicationGuildCommands(this.user.id, this.config.bot.guildId), { body: [] });
-        startupLog('✅ [Railway Clear] Đã xóa xong lệnh trong Server!');
-      }
+    //   if (this.config.bot.guildId) {
+    //     await this.rest.put(Routes.applicationGuildCommands(this.user.id, this.config.bot.guildId), { body: [] });
+    //     startupLog('✅ [Railway Clear] Đã xóa xong lệnh trong Server!');
+    //   }
       
-      await this.rest.put(Routes.applicationCommands(this.user.id), { body: [] });
-      startupLog('✅ [Railway Clear] Đã xóa xong toàn bộ lệnh Global!');
-      // --- HẾT ĐOẠN CODE XÓA TẠM THỜI ---
+    //   await this.rest.put(Routes.applicationCommands(this.user.id), { body: [] });
+    //   startupLog('✅ [Railway Clear] Đã xóa xong toàn bộ lệnh Global!');
+    //   // --- HẾT ĐOẠN CODE XÓA TẠM THỜI ---
 
-      await registerSlashCommands(this, this.config.bot.guildId);
+    //   await registerSlashCommands(this, this.config.bot.guildId);
+    // } catch (error) {
+    //   logger.error('Error registering commands:', error);
+    // }
+    await registerSlashCommands(this, this.config.bot.guildId);
     } catch (error) {
       logger.error('Error registering commands:', error);
     }
