@@ -1,5 +1,5 @@
 import { getColor } from '../../config/bot.js';
-import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, LabelBuilder } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder } from 'discord.js';
 import { errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { LughxBotError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -14,29 +14,28 @@ import {
     getConfiguration
 } from '../../services/joinToCreateService.js';
 
-
 export default {
     data: new SlashCommandBuilder()
         .setName("jointocreate")
-        .setDescription("Manage Join to Create voice channels system.")
+        .setDescription("Quản lý hệ thống kênh thoại Join to Create.")
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand((subcommand) =>
             subcommand
                 .setName("setup")
-                .setDescription("Set up a new Join to Create voice channel.")
+                .setDescription("Thiết lập một kênh thoại Join to Create mới.")
                 .addChannelOption((option) =>
                     option
                         .setName("category")
-                        .setDescription("Category to create the channel in.")
+                        .setDescription("Danh mục để tạo kênh.")
                         .addChannelTypes(ChannelType.GuildCategory)
                 )
                 .addStringOption((option) =>
                     option
                         .setName("channel_name")
-                        .setDescription("Select a template for naming temporary voice channels.")
+                        .setDescription("Chọn mẫu đặt tên cho các kênh thoại tạm thời.")
                         .addChoices(
-                            { name: "{username}'s Room (Default)", value: "{username}'s Room" },
+                            { name: "{username}'s Room (Mặc định)", value: "{username}'s Room" },
                             { name: "{username}'s Channel", value: "{username}'s Channel" },
                             { name: "{username}'s Lounge", value: "{username}'s Lounge" },
                             { name: "{username}'s Space", value: "{username}'s Space" },
@@ -51,22 +50,22 @@ export default {
                 .addIntegerOption((option) =>
                     option
                         .setName("user_limit")
-                        .setDescription("Maximum number of users in temporary channels. (0 = unlimited)")
+                        .setDescription("Số lượng người dùng tối đa. (0 = không giới hạn)")
                 )
                 .addIntegerOption((option) =>
                     option
                         .setName("bitrate")
-                        .setDescription("Bitrate for temporary channels in kbps (8-96).")
+                        .setDescription("Tốc độ bit cho kênh tạm thời (8-96 kbps).")
                 )
         )
         .addSubcommand((subcommand) =>
             subcommand
                 .setName("dashboard")
-                .setDescription("Configure an existing Join to Create system.")
+                .setDescription("Cấu hình hệ thống Join to Create hiện có.")
                 .addChannelOption((option) =>
                     option
                         .setName("trigger_channel")
-                        .setDescription("The Join to Create trigger channel to configure.")
+                        .setDescription("Kênh kích hoạt Join to Create cần cấu hình.")
                         .setRequired(true)
                         .addChannelTypes(ChannelType.GuildVoice)
                 )
@@ -75,26 +74,21 @@ export default {
 
     async execute(interaction, config, client) {
         try {
-            
             if (!hasManageGuildPermission(interaction.member)) {
                 throw new LughxBotError(
                     'User lacks ManageGuild permission',
                     ErrorTypes.PERMISSION,
-                    'You need **Manage Server** permission to use this command.'
+                    'Bạn cần quyền **Quản lý máy chủ** để sử dụng lệnh này.'
                 );
             }
 
             const subcommand = interaction.options.getSubcommand();
             await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
-            let responseEmbed;
-
             if (subcommand === "setup") {
                 await handleSetupSubcommand(interaction, client);
-                return;
             } else if (subcommand === "dashboard") {
                 await handleConfigSubcommand(interaction, client);
-                return;
             }
 
         } catch (error) {
