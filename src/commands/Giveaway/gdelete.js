@@ -10,12 +10,12 @@ export default {
     data: new SlashCommandBuilder()
         .setName("gdelete")
         .setDescription(
-            "Deletes a giveaway message and removes it from the database.",
+            "Xóa tin nhắn giveaway và loại bỏ nó khỏi cơ sở dữ liệu.",
         )
         .addStringOption((option) =>
             option
                 .setName("messageid")
-                .setDescription("The message ID of the giveaway to delete.")
+                .setDescription("ID tin nhắn của giveaway cần xóa.")
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
@@ -27,17 +27,16 @@ export default {
                 throw new LughxBotError(
                     'Giveaway command used outside guild',
                     ErrorTypes.VALIDATION,
-                    'This command can only be used in a server.',
+                    'Lệnh này chỉ có thể được sử dụng trong máy chủ.',
                     { userId: interaction.user.id }
                 );
             }
-
             
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
                 throw new LughxBotError(
                     'User lacks ManageGuild permission',
                     ErrorTypes.PERMISSION,
-                    "You need the 'Manage Server' permission to delete a giveaway.",
+                    "Bạn cần quyền 'Quản lý máy chủ' để xóa giveaway.",
                     { userId: interaction.user.id, guildId: interaction.guildId }
                 );
             }
@@ -45,13 +44,12 @@ export default {
             logger.info(`Giveaway deletion started by ${interaction.user.tag} in guild ${interaction.guildId}`);
 
             const messageId = interaction.options.getString("messageid");
-
             
             if (!messageId || !/^\d+$/.test(messageId)) {
                 throw new LughxBotError(
                     'Invalid message ID format',
                     ErrorTypes.VALIDATION,
-                    'Please provide a valid message ID.',
+                    'Vui lòng cung cấp ID tin nhắn hợp lệ.',
                     { providedId: messageId }
                 );
             }
@@ -63,13 +61,13 @@ export default {
                 throw new LughxBotError(
                     `Giveaway not found: ${messageId}`,
                     ErrorTypes.VALIDATION,
-                    "No giveaway was found with that message ID.",
+                    "Không tìm thấy giveaway nào với ID tin nhắn đó.",
                     { messageId, guildId: interaction.guildId }
                 );
             }
 
             let deletedMessage = false;
-            let channelName = "Unknown Channel";
+            let channelName = "Kênh không xác định";
 
             const tryDeleteFromChannel = async (channel) => {
                 if (!channel || !channel.isTextBased() || !channel.messages?.fetch) {
@@ -82,11 +80,10 @@ export default {
                 }
 
                 await message.delete();
-                channelName = channel.name || 'unknown-channel';
+                channelName = channel.name || 'kênh-không-xác-định';
                 deletedMessage = true;
                 return true;
             };
-
             
             try {
                 const channel = await interaction.client.channels.fetch(giveaway.channelId).catch(() => null);
@@ -110,7 +107,6 @@ export default {
             } catch (error) {
                 logger.warn(`Could not delete giveaway message: ${error.message}`);
             }
-
             
             const removedFromDatabase = await deleteGiveaway(
                 interaction.client,
@@ -122,7 +118,7 @@ export default {
                 throw new LughxBotError(
                     `Failed to delete giveaway from database: ${messageId}`,
                     ErrorTypes.UNKNOWN,
-                    'The giveaway could not be removed from the database. Please try again.',
+                    'Không thể xóa giveaway khỏi cơ sở dữ liệu. Vui lòng thử lại.',
                     { messageId, guildId: interaction.guildId }
                 );
             }
@@ -134,27 +130,26 @@ export default {
                 throw new LughxBotError(
                     `Giveaway still exists after deletion: ${messageId}`,
                     ErrorTypes.UNKNOWN,
-                    'Deletion did not persist in the database. Please try again.',
+                    'Việc xóa không được lưu vào cơ sở dữ liệu. Vui lòng thử lại.',
                     { messageId, guildId: interaction.guildId }
                 );
             }
 
             const statusMsg = deletedMessage
-                ? `and the message was deleted from #${channelName}`
-                : `but the message was already deleted or the channel was inaccessible.`;
+                ? `và tin nhắn đã bị xóa khỏi #${channelName}`
+                : `nhưng tin nhắn đã bị xóa hoặc không thể truy cập kênh.`;
 
             const winnerIds = Array.isArray(giveaway.winnerIds) ? giveaway.winnerIds : [];
             const hasWinners = winnerIds.length > 0;
             const wasEnded = giveaway.ended === true || giveaway.isEnded === true || hasWinners;
 
             const winnerStatusMsg = hasWinners
-                ? `This giveaway already had ${winnerIds.length} winner(s) selected.`
+                ? `Giveaway này đã chọn được ${winnerIds.length} người chiến thắng.`
                 : wasEnded
-                    ? 'This giveaway was ended with no valid winners.'
-                    : 'No winner was picked before deletion.';
+                    ? 'Giveaway này đã kết thúc mà không có người chiến thắng hợp lệ.'
+                    : 'Chưa có người chiến thắng nào được chọn trước khi xóa.';
 
             logger.info(`Giveaway deleted: ${messageId} in ${channelName}`);
-
             
             try {
                 await logEvent({
@@ -162,20 +157,12 @@ export default {
                     guildId: interaction.guildId,
                     eventType: EVENT_TYPES.GIVEAWAY_DELETE,
                     data: {
-                        description: `Giveaway deleted: ${giveaway.prize}`,
+                        description: `Giveaway đã xóa: ${giveaway.prize}`,
                         channelId: giveaway.channelId,
                         userId: interaction.user.id,
                         fields: [
-                            {
-                                name: '🎁 Prize',
-                                value: giveaway.prize || 'Unknown',
-                                inline: true
-                            },
-                            {
-                                name: '📊 Entries',
-                                value: (giveaway.participants?.length || 0).toString(),
-                                inline: true
-                            }
+                            { name: '🎁 Phần thưởng', value: giveaway.prize || 'Không xác định', inline: true },
+                            { name: '📊 Lượt tham gia', value: (giveaway.participants?.length || 0).toString(), inline: true }
                         ]
                     }
                 });
@@ -186,8 +173,8 @@ export default {
             return InteractionHelper.safeReply(interaction, {
                 embeds: [
                     successEmbed(
-                        "Giveaway Deleted",
-                        `Successfully deleted the giveaway for **${giveaway.prize}** ${statusMsg}. ${winnerStatusMsg}`,
+                        "Đã xóa Giveaway",
+                        `Đã xóa thành công giveaway cho **${giveaway.prize}** ${statusMsg}. ${winnerStatusMsg}`,
                     ),
                 ],
                 flags: MessageFlags.Ephemeral,
@@ -203,5 +190,3 @@ export default {
         }
     },
 };
-
-

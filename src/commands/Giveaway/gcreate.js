@@ -16,19 +16,17 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("gcreate")
-        .setDescription("Starts a new giveaway in a specified channel.")
+        .setDescription("Tạo một giveaway mới trong kênh chỉ định.")
         .addStringOption((option) =>
             option
                 .setName("duration")
-                .setDescription(
-                    "How long the giveaway should last (e.g., 1h, 30m, 5d).",
-                )
+                .setDescription("Thời gian giveaway (ví dụ: 1h, 30m, 5d).")
                 .setRequired(true),
         )
         .addIntegerOption((option) =>
             option
                 .setName("winners")
-                .setDescription("The number of winners to pick.")
+                .setDescription("Số lượng người chiến thắng.")
                 .setMinValue(1)
                 .setMaxValue(10)
                 .setRequired(true),
@@ -36,13 +34,13 @@ export default {
         .addStringOption((option) =>
             option
                 .setName("prize")
-                .setDescription("The prize being given away.")
+                .setDescription("Phần thưởng của giveaway.")
                 .setRequired(true),
         )
         .addChannelOption((option) =>
             option
                 .setName("channel")
-                .setDescription("The channel to send the giveaway to (defaults to current channel).")
+                .setDescription("Kênh để gửi giveaway (mặc định là kênh hiện tại).")
                 .addChannelTypes(ChannelType.GuildText)
                 .setRequired(false),
         )
@@ -55,46 +53,41 @@ export default {
                 throw new LughxBotError(
                     'Giveaway command used outside guild',
                     ErrorTypes.VALIDATION,
-                    'This command can only be used in a server.',
+                    'Lệnh này chỉ có thể được sử dụng trong máy chủ.',
                     { userId: interaction.user.id }
                 );
             }
-
             
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
                 throw new LughxBotError(
                     'User lacks ManageGuild permission',
                     ErrorTypes.PERMISSION,
-                    "You need the 'Manage Server' permission to start a giveaway.",
+                    "Bạn cần quyền 'Quản lý máy chủ' để tạo giveaway.",
                     { userId: interaction.user.id, guildId: interaction.guildId }
                 );
             }
 
             logger.info(`Giveaway creation started by ${interaction.user.tag} in guild ${interaction.guildId}`);
-
             
             const durationString = interaction.options.getString("duration");
             const winnerCount = interaction.options.getInteger("winners");
             const prize = interaction.options.getString("prize");
             const targetChannel = interaction.options.getChannel("channel") || interaction.channel;
-
             
             const durationMs = parseDuration(durationString);
             validateWinnerCount(winnerCount);
             const prizeName = validatePrize(prize);
-
             
             if (!targetChannel.isTextBased()) {
                 throw new LughxBotError(
                     'Target channel is not text-based',
                     ErrorTypes.VALIDATION,
-                    'The channel must be a text channel.',
+                    'Kênh được chọn phải là kênh văn bản.',
                     { channelId: targetChannel.id, channelType: targetChannel.type }
                 );
             }
 
             const endTime = Date.now() + durationMs;
-
             
             const initialGiveawayData = {
                 messageId: "placeholder",
@@ -110,18 +103,15 @@ export default {
                 ended: false,
                 createdAt: new Date().toISOString()
             };
-
             
             const embed = createGiveawayEmbed(initialGiveawayData, "active");
             const row = createGiveawayButtons(false);
             
-            
             const giveawayMessage = await targetChannel.send({
-                content: "🎉 **NEW GIVEAWAY** 🎉",
+                content: "🎉 **GIVEAWAY MỚI** 🎉",
                 embeds: [embed],
                 components: [row],
             });
-
             
             initialGiveawayData.messageId = giveawayMessage.id;
             const saved = await saveGiveaway(
@@ -133,7 +123,6 @@ export default {
             if (!saved) {
                 logger.warn(`Failed to save giveaway to database: ${giveawayMessage.id}`);
             }
-
             
             try {
                 await logEvent({
@@ -141,30 +130,14 @@ export default {
                     guildId: interaction.guildId,
                     eventType: EVENT_TYPES.GIVEAWAY_CREATE,
                     data: {
-                        description: `Giveaway created: ${prizeName}`,
+                        description: `Giveaway đã tạo: ${prizeName}`,
                         channelId: targetChannel.id,
                         userId: interaction.user.id,
                         fields: [
-                            {
-                                name: '🎁 Prize',
-                                value: prizeName,
-                                inline: true
-                            },
-                            {
-                                name: '🏆 Winners',
-                                value: winnerCount.toString(),
-                                inline: true
-                            },
-                            {
-                                name: '⏰ Duration',
-                                value: durationString,
-                                inline: true
-                            },
-                            {
-                                name: '📍 Channel',
-                                value: targetChannel.toString(),
-                                inline: true
-                            }
+                            { name: '🎁 Phần thưởng', value: prizeName, inline: true },
+                            { name: '🏆 Người thắng', value: winnerCount.toString(), inline: true },
+                            { name: '⏰ Thời lượng', value: durationString, inline: true },
+                            { name: '📍 Kênh', value: targetChannel.toString(), inline: true }
                         ]
                     }
                 });
@@ -173,13 +146,12 @@ export default {
             }
 
             logger.info(`Giveaway created successfully: ${giveawayMessage.id} in ${targetChannel.name}`);
-
             
             await InteractionHelper.safeReply(interaction, {
                 embeds: [
                     successEmbed(
-                        `Giveaway Started! 🎉`,
-                        `A new giveaway for **${prizeName}** has been started in ${targetChannel} and will end in **${durationString}**.`,
+                        `Giveaway đã bắt đầu! 🎉`,
+                        `Một giveaway mới cho **${prizeName}** đã được bắt đầu tại ${targetChannel} và sẽ kết thúc trong **${durationString}**.`,
                     ),
                 ],
                 flags: MessageFlags.Ephemeral,
@@ -194,6 +166,3 @@ export default {
         }
     },
 };
-
-
-
