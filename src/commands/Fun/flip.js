@@ -7,23 +7,23 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("flip")
-    .setDescription("Flips a coin (Heads or Tails)."),
+    .setDescription("Tung một đồng xu (Sấp hoặc Ngửa)."),
   category: 'Fun',
 
   async execute(interaction, config, client) {
     try {
-      const result = Math.random() < 0.5 ? "Heads" : "Tails";
-      const emoji = result === "Heads" ? "🪙" : "🔮";
+      const result = Math.random() < 0.5 ? "Sấp" : "Ngửa";
+      const emoji = result === "Sấp" ? "🪙" : "🔮";
 
       const embed = successEmbed(
-        "Heads or Tails?",
-        `The coin landed on... **${result}** ${emoji}!`,
+        "Sấp hay Ngửa?",
+        `Đồng xu đã rơi vào mặt... **${result}** ${emoji}!`,
       );
 
       await InteractionHelper.safeReply(interaction, { embeds: [embed] });
-      logger.debug(`Flip command executed by user ${interaction.user.id} in guild ${interaction.guildId}`);
+      logger.debug(`Lệnh flip được thực hiện bởi người dùng ${interaction.user.id} trong máy chủ ${interaction.guildId}`);
     } catch (error) {
-      logger.error('Flip command error:', error);
+      logger.error('Lỗi lệnh flip:', error);
       await handleInteractionError(interaction, error, {
         commandName: 'flip',
         source: 'flip_command'
@@ -31,6 +31,3 @@ export default {
     }
   },
 };
-
-
-

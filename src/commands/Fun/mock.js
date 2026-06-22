@@ -8,11 +8,11 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("mock")
-    .setDescription("cOnVeRtS yOuR tExT tO sPoNgEbOb CaSe.")
+    .setDescription("cHuYểN vĂn bẢn cỦa bẠn tHàNh kIểU cHữ sPoNgEbOb.")
     .addStringOption((option) =>
       option
         .setName("text")
-        .setDescription("The text to mock.")
+        .setDescription("Văn bản bạn muốn chuyển đổi.")
         .setRequired(true)
         .setMaxLength(1000),
     ),
@@ -22,15 +22,13 @@ export default {
     try {
       const originalText = interaction.options.getString("text");
       
-      
       if (!originalText || originalText.trim().length === 0) {
         throw new LughxBotError(
           'Empty text provided to mock command',
           ErrorTypes.USER_INPUT,
-          'Please provide some text to mock!'
+          'Vui lòng nhập nội dung văn bản để chuyển đổi!'
         );
       }
-
       
       const sanitizedText = sanitizeInput(originalText, 1000);
 
@@ -44,12 +42,12 @@ export default {
         }
       }
 
-      const embed = successEmbed("sPoNgEbOb cAsE", `"${mockedText}"`);
+      const embed = successEmbed("kIểU cHữ sPoNgEbOb", `"${mockedText}"`);
 
       await InteractionHelper.safeReply(interaction, { embeds: [embed] });
-      logger.debug(`Mock command executed by user ${interaction.user.id} in guild ${interaction.guildId}`);
+      logger.debug(`Lệnh mock được thực hiện bởi người dùng ${interaction.user.id} trong máy chủ ${interaction.guildId}`);
     } catch (error) {
-      logger.error('Mock command error:', error);
+      logger.error('Lỗi lệnh mock:', error);
       await handleInteractionError(interaction, error, {
         commandName: 'mock',
         source: 'mock_command'
@@ -57,5 +55,3 @@ export default {
     }
   },
 };
-
-

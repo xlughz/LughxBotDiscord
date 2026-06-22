@@ -5,30 +5,30 @@ import { handleInteractionError, LughxBotError, ErrorTypes } from '../../utils/e
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 const facts = [
-  "A day on Venus is longer than a year on Venus.",
-  "The shortest war in history was between Britain and Zanzibar on August 27, 1896. It lasted 38 to 45 minutes.",
-  "The word 'Strengths' is the longest word in the English language with only one vowel.",
-  "Octopuses have three hearts and blue blood.",
-  "There are more trees on Earth than stars in the Milky Way galaxy.",
-  "The total weight of all the ants on Earth is thought to be about the same as the total weight of all humans.",
+  "Một ngày trên sao Kim dài hơn một năm trên sao Kim.",
+  "Cuộc chiến ngắn nhất trong lịch sử là giữa Anh và Zanzibar vào ngày 27 tháng 8 năm 1896. Nó chỉ kéo dài từ 38 đến 45 phút.",
+  "Từ 'Strengths' là từ dài nhất trong tiếng Anh chỉ có một nguyên âm.",
+  "Bạch tuộc có ba trái tim và máu màu xanh.",
+  "Số lượng cây trên Trái đất nhiều hơn số lượng các ngôi sao trong dải Ngân hà.",
+  "Tổng trọng lượng của tất cả loài kiến trên Trái đất được cho là tương đương với tổng trọng lượng của tất cả con người.",
 ];
 
 export default {
     data: new SlashCommandBuilder()
     .setName("fact")
-    .setDescription("Shares a random, interesting fact."),
+    .setDescription("Chia sẻ một sự thật thú vị ngẫu nhiên."),
   category: 'Fun',
 
   async execute(interaction, config, client) {
     try {
       const randomFact = facts[Math.floor(Math.random() * facts.length)];
 
-      const embed = successEmbed("🧠 Did You Know?", `💡 **${randomFact}**`);
+      const embed = successEmbed("🧠 Bạn có biết?", `💡 **${randomFact}**`);
 
       await InteractionHelper.safeReply(interaction, { embeds: [embed] });
-      logger.debug(`Fact command executed by user ${interaction.user.id} in guild ${interaction.guildId}`);
+      logger.debug(`Lệnh fact được thực hiện bởi người dùng ${interaction.user.id} trong máy chủ ${interaction.guildId}`);
     } catch (error) {
-      logger.error('Fact command error:', error);
+      logger.error('Lỗi lệnh fact:', error);
       await handleInteractionError(interaction, error, {
         commandName: 'fact',
         source: 'fact_command'
@@ -36,7 +36,3 @@ export default {
     }
   },
 };
-
-
-
-

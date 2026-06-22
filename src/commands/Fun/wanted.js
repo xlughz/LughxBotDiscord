@@ -8,17 +8,17 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("wanted")
-    .setDescription("Create a WANTED poster for a user.")
+    .setDescription("Tạo một poster TRUY NÃ cho một người dùng.")
     .addUserOption((option) =>
       option
         .setName("user")
-        .setDescription("The user who is wanted.")
+        .setDescription("Người dùng bị truy nã.")
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("crime")
-        .setDescription("The crime they committed.")
+        .setDescription("Tội danh mà họ đã gây ra.")
         .setRequired(false)
         .setMaxLength(100),
     ),
@@ -31,8 +31,7 @@ export default {
       const targetUser = interaction.options.getUser("user");
       const crimeRaw = interaction.options.getString("crime");
 
-      
-      let crime = "Too adorable for this server.";
+      let crime = "Quá đáng yêu đối với máy chủ này.";
       if (crimeRaw) {
         const sanitizedCrime = sanitizeInput(crimeRaw.trim(), 100);
         if (sanitizedCrime.length > 0) {
@@ -40,12 +39,11 @@ export default {
         }
       }
 
-      
       if (!targetUser) {
         throw new LughxBotError(
           'Target user not found for wanted command',
           ErrorTypes.USER_INPUT,
-          'Could not find the specified user.'
+          'Không tìm thấy người dùng đã chỉ định.'
         );
       }
 
@@ -56,12 +54,12 @@ export default {
 
       const embed = createEmbed({
         color: 'primary',
-        title: '💥 BIG BOUNTY: WANTED! 💥',
-        description: `**CRIMINAL:** ${targetUser.tag}\n**CRIME:** ${crime}`,
+        title: '💥 TRUY NÃ TỘI PHẠM: WANTED! 💥',
+        description: `**TỘI PHẠM:** ${targetUser.tag}\n**TỘI DANH:** ${crime}`,
         fields: [
           {
-            name: "DEAD OR ALIVE",
-            value: `**BOUNTY:** ${bounty}`,
+            name: "SỐNG HAY CHẾT",
+            value: `**TIỀN THƯỞNG:** ${bounty}`,
             inline: false,
           },
         ],
@@ -69,14 +67,14 @@ export default {
           url: targetUser.displayAvatarURL({ size: 1024, extension: 'png' }),
         },
         footer: {
-          text: `Last seen in ${interaction.guild.name}`,
+          text: `Lần cuối nhìn thấy tại ${interaction.guild.name}`,
         },
       });
 
       await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-      logger.debug(`Wanted command executed by user ${interaction.user.id} for ${targetUser.id} in guild ${interaction.guildId}`);
+      logger.debug(`Lệnh wanted được thực hiện bởi người dùng ${interaction.user.id} cho ${targetUser.id} trong máy chủ ${interaction.guildId}`);
     } catch (error) {
-      logger.error('Wanted command error:', error);
+      logger.error('Lỗi lệnh wanted:', error);
       await handleInteractionError(interaction, error, {
         commandName: 'wanted',
         source: 'wanted_command'
@@ -84,6 +82,3 @@ export default {
     }
   },
 };
-
-
-
