@@ -299,8 +299,24 @@ class LughxBot extends Client {
     }
   }
 
-  async registerCommands() {
+async registerCommands() {
     try {
+      // --- ĐOẠN CODE XÓA LỆNH TẠM THỜI ---
+      import { Routes } from 'discord.js'; // Đảm bảo import thêm Routes từ discord.js ở đầu file nếu chưa có
+      startupLog('🔄 [Railway Clear] Đang tiến hành xóa sạch lệnh cũ...');
+      
+      // 1. Xóa lệnh trong Server Test (nếu có cấu hình Guild ID)
+      if (this.config.bot.guildId) {
+        await this.rest.put(Routes.applicationGuildCommands(this.user.id, this.config.bot.guildId), { body: [] });
+        startupLog('✅ [Railway Clear] Đã xóa xong lệnh trong Server!');
+      }
+      
+      // 2. Xóa lệnh Toàn cầu (Global Commands)
+      await this.rest.put(Routes.applicationCommands(this.user.id), { body: [] });
+      startupLog('✅ [Railway Clear] Đã xóa xong toàn bộ lệnh Global!');
+      // --- HẾT ĐOẠN CODE XÓA TẠM THỜI ---
+
+      // Vẫn giữ lại dòng này để sau khi xóa, bot đăng ký lại đống lệnh mới luôn
       await registerSlashCommands(this, this.config.bot.guildId);
     } catch (error) {
       logger.error('Error registering commands:', error);
