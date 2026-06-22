@@ -9,14 +9,13 @@ import { getColor } from '../../config/bot.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('define')
-        .setDescription('Look up a word definition')
+        .setDescription('Tra cứu định nghĩa của một từ')
         .addStringOption(option => 
             option.setName('word')
-                .setDescription('The word to look up')
+                .setDescription('Từ cần tra cứu')
                 .setRequired(true)),
     async execute(interaction) {
         try {
-            
             const deferred = await InteractionHelper.safeDefer(interaction);
             if (!deferred) {
                 return;
@@ -25,13 +24,13 @@ export default {
             const word = interaction.options.getString('word');
             
             if (word.length < 2) {
-                logger.warn('Define command - word too short', {
+                logger.warn('Lệnh define - từ quá ngắn', {
                     userId: interaction.user.id,
                     word: word,
                     guildId: interaction.guildId
                 });
                 return await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [errorEmbed('Error', 'Please enter a word with at least 2 characters.')],
+                    embeds: [errorEmbed('Lỗi', 'Vui lòng nhập một từ có ít nhất 2 ký tự.')],
                     flags: MessageFlags.Ephemeral
                 });
             }
@@ -43,7 +42,7 @@ export default {
             
             if (!response.data || response.data.length === 0) {
                 return await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [errorEmbed('Not Found', `No definitions found for "${word}".`)]
+                    embeds: [errorEmbed('Không tìm thấy', `Không tìm thấy định nghĩa cho từ "${word}".`)]
                 });
             }
             
@@ -60,7 +59,7 @@ export default {
                     .map((def, idx) => {
                         let text = `${idx + 1}. ${def.definition}`;
                         if (def.example) {
-                            text += `\n   *Example: ${def.example}*`;
+                            text += `\n   *Ví dụ: ${def.example}*`;
                         }
                         return text;
                     })
@@ -68,18 +67,18 @@ export default {
                 
                 if (definitions) {
                     embed.addFields({
-                        name: `**${meaning.partOfSpeech || 'Definition'}**`,
+                        name: `**${meaning.partOfSpeech || 'Định nghĩa'}**`,
                         value: definitions,
                         inline: false
                     });
                 }
             });
             
-            embed.setFooter({ text: 'Powered by Free Dictionary API' });
+            embed.setFooter({ text: 'Dữ liệu từ Free Dictionary API' });
             
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
             
-            logger.info('Dictionary definition retrieved', {
+            logger.info('Đã truy xuất định nghĩa từ điển', {
                 userId: interaction.user.id,
                 word: word,
                 guildId: interaction.guildId,
@@ -87,7 +86,7 @@ export default {
             });
             
         } catch (error) {
-            logger.error('Dictionary lookup error', {
+            logger.error('Lỗi tra cứu từ điển', {
                 error: error.message,
                 stack: error.stack,
                 userId: interaction.user.id,
@@ -96,10 +95,9 @@ export default {
                 commandName: 'define'
             });
             
-            
             if (error.response?.status === 404) {
                 await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [errorEmbed('Not Found', `No definitions found for "${interaction.options.getString('word')}".`)]
+                    embeds: [errorEmbed('Không tìm thấy', `Không tìm thấy định nghĩa cho từ "${interaction.options.getString('word')}".`)]
                 });
             } else {
                 await handleInteractionError(interaction, error, {
@@ -110,5 +108,3 @@ export default {
         }
     },
 };
-
-

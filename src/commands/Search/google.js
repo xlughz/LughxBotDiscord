@@ -2,16 +2,16 @@ import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { createEmbed, errorEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
+import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getColor } from '../../config/bot.js';
 
-import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('google')
-        .setDescription('Search Google')
+        .setDescription('Tìm kiếm trên Google')
         .addStringOption(option => 
             option.setName('query')
-                .setDescription('What would you like to search for?')
+                .setDescription('Bạn muốn tìm kiếm nội dung gì?')
                 .setRequired(true)),
     async execute(interaction) {
         try {
@@ -19,22 +19,22 @@ export default {
             const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
             
             const embed = createEmbed({
-                title: 'Google Search',
-                description: `[Search for "${query}"](${searchUrl})`,
+                title: 'Tìm kiếm Google',
+                description: `[Tìm kiếm "${query}"](${searchUrl})`,
                 color: 'info'
             })
-            .setFooter({ text: 'Google Search Results' });
+            .setFooter({ text: 'Kết quả tìm kiếm Google' });
 
             await InteractionHelper.safeReply(interaction, { embeds: [embed] });
             
-            logger.info('Google search link generated', {
+            logger.info('Liên kết tìm kiếm Google đã được tạo', {
                 userId: interaction.user.id,
                 query: query,
                 guildId: interaction.guildId,
                 commandName: 'google'
             });
         } catch (error) {
-            logger.error('Error in google command', {
+            logger.error('Lỗi trong lệnh google', {
                 error: error.message,
                 stack: error.stack,
                 userId: interaction.user.id,
@@ -48,5 +48,3 @@ export default {
         }
     },
 };
-
-
