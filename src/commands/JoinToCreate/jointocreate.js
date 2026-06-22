@@ -1,5 +1,5 @@
 import { getColor } from '../../config/bot.js';
-import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, LabelBuilder } from 'discord.js';
 import { errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { LughxBotError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -13,6 +13,7 @@ import {
     logConfigurationChange,
     getConfiguration
 } from '../../services/joinToCreateService.js';
+
 
 export default {
     data: new SlashCommandBuilder()
@@ -90,20 +91,19 @@ export default {
             } else if (subcommand === "dashboard") {
                 await handleConfigSubcommand(interaction, client);
             }
-
         } catch (error) {
             try {
-                let errorMessage = 'An error occurred while executing this command.';
+                let errorMessage = 'Đã xảy ra lỗi khi thực thi lệnh này.';
                 
                 if (error instanceof LughxBotError) {
-                    errorMessage = error.userMessage || 'An error occurred. Please try again.';
+                    errorMessage = error.userMessage || 'Đã xảy ra lỗi. Vui lòng thử lại.';
                     logger.debug(`LughxBotError [${error.type}]: ${error.message}`, error.context || {});
                 } else {
-                    logger.error('Unexpected error in jointocreate command:', error);
-                    errorMessage = 'An unexpected error occurred. Please try again or contact support.';
+                    logger.error('Lỗi bất ngờ trong lệnh jointocreate:', error);
+                    errorMessage = 'Đã xảy ra lỗi bất ngờ. Vui lòng thử lại hoặc liên hệ hỗ trợ.';
                 }
 
-                const errorEmbedObj = errorEmbed("⚠️ Error", errorMessage);
+                const errorEmbedObj = errorEmbed("⚠️ Lỗi", errorMessage);
 
                 if (interaction.deferred) {
                     return await InteractionHelper.safeEditReply(interaction, { embeds: [errorEmbedObj] });
@@ -111,7 +111,7 @@ export default {
                     return await InteractionHelper.safeReply(interaction, { embeds: [errorEmbedObj], flags: MessageFlags.Ephemeral });
                 }
             } catch (replyError) {
-                logger.error('Failed to send error message:', replyError);
+                logger.error('Không thể gửi thông báo lỗi:', replyError);
             }
         }
     }
@@ -127,7 +127,6 @@ async function handleSetupSubcommand(interaction, client) {
 
         logger.debug(`Setting up Join to Create in guild ${guildId} with template: ${nameTemplate}`);
 
-        // Check if guild already has a Join to Create channel configured
         const existingConfig = await getConfiguration(client, guildId);
         
         if (Array.isArray(existingConfig.triggerChannels) && existingConfig.triggerChannels.length > 0) {
@@ -152,7 +151,7 @@ async function handleSetupSubcommand(interaction, client) {
 
             if (activeTriggerChannels.length > 0) {
                 const primaryTrigger = activeTriggerChannels[0];
-                const errorMessage = `This server already has a Join to Create channel set up: ${primaryTrigger}\n\nUse \`/jointocreate dashboard\` to modify it, or remove it first before creating a new one.`;
+                const errorMessage = `Máy chủ này đã có kênh Join to Create: ${primaryTrigger}\n\nSử dụng \`/jointocreate dashboard\` để sửa đổi, hoặc xóa kênh đó trước khi tạo mới.`;
 
                 throw new LughxBotError(
                     'Guild already has a Join to Create channel',
@@ -168,7 +167,6 @@ async function handleSetupSubcommand(interaction, client) {
             }
         }
 
-        // Create the trigger channel
         logger.debug('Creating Join to Create trigger channel...');
         let triggerChannel = await interaction.guild.channels.create({
             name: 'Join to Create',
@@ -186,7 +184,6 @@ async function handleSetupSubcommand(interaction, client) {
 
         logger.debug(`Created trigger channel ${triggerChannel.id}, initializing config...`);
 
-        // Initialize the Join to Create configuration
         const config = await initializeJoinToCreate(client, guildId, triggerChannel.id, {
             nameTemplate: nameTemplate,
             userLimit: userLimit,
@@ -204,13 +201,13 @@ async function handleSetupSubcommand(interaction, client) {
         logger.info(`Successfully created Join to Create system in guild ${guildId}`);
 
         const responseEmbed = successEmbed(
-            '✅ Setup Complete',
-            `Created Join to Create channel: ${triggerChannel}\n\n` +
-            `**Settings:**\n` +
-            `• Template: \`${nameTemplate}\`\n` +
-            `• User Limit: ${userLimit === 0 ? 'Unlimited' : userLimit + ' users'}\n` +
-            `• Bitrate: ${bitrate} kbps\n` +
-            `${category ? `• Category: ${category.name}` : '• Category: Root level'}`
+            '✅ Hoàn tất thiết lập',
+            `Đã tạo kênh Join to Create: ${triggerChannel}\n\n` +
+            `**Cài đặt:**\n` +
+            `• Mẫu tên: \`${nameTemplate}\`\n` +
+            `• Giới hạn người dùng: ${userLimit === 0 ? 'Không giới hạn' : userLimit + ' người'}\n` +
+            `• Tốc độ bit: ${bitrate} kbps\n` +
+            `${category ? `• Danh mục: ${category.name}` : '• Danh mục: Gốc'}`
         );
 
         return await InteractionHelper.safeEditReply(interaction, { embeds: [responseEmbed] });
@@ -223,7 +220,7 @@ async function handleSetupSubcommand(interaction, client) {
         throw new LughxBotError(
             `Setup failed: ${error.message}`,
             ErrorTypes.DISCORD_API,
-            'Failed to set up Join to Create system. Please check bot permissions.'
+            'Không thể thiết lập hệ thống Join to Create. Vui lòng kiểm tra quyền của bot.'
         );
     }
 }
@@ -233,54 +230,51 @@ async function handleConfigSubcommand(interaction, client) {
         const triggerChannel = interaction.options.getChannel('trigger_channel');
         const guildId = interaction.guild.id;
 
-        // Validate that the channel is actually a Join to Create trigger
         const currentConfig = await getChannelConfiguration(client, guildId, triggerChannel.id);
         const channelConfig = currentConfig.channelConfig || {};
 
-        
         const configEmbed = new EmbedBuilder()
-            .setTitle('⚙️ Join to Create Configuration')
-            .setDescription(`Configuration for ${triggerChannel}`)
+            .setTitle('⚙️ Cấu hình Join to Create')
+            .setDescription(`Cấu hình cho ${triggerChannel}`)
             .setColor(getColor('info'))
             .addFields(
                 {
-                    name: '📝 Channel Name Template',
+                    name: '📝 Mẫu tên kênh',
                     value: `\`${channelConfig.nameTemplate || currentConfig.channelNameTemplate || "{username}'s Room"}\``,
                     inline: false
                 },
                 {
-                    name: '👥 User Limit',
-                    value: `${(channelConfig.userLimit ?? currentConfig.userLimit ?? 0) === 0 ? 'Unlimited' : (channelConfig.userLimit ?? currentConfig.userLimit ?? 0) + ' users'}`,
+                    name: '👥 Giới hạn người dùng',
+                    value: `${(channelConfig.userLimit ?? currentConfig.userLimit ?? 0) === 0 ? 'Không giới hạn' : (channelConfig.userLimit ?? currentConfig.userLimit ?? 0) + ' người'}`,
                     inline: true
                 },
                 {
-                    name: '🎵 Bitrate',
+                    name: '🎵 Tốc độ bit',
                     value: `${(channelConfig.bitrate ?? currentConfig.bitrate ?? 64000) / 1000} kbps`,
                     inline: true
                 }
             )
-            .setFooter({ text: 'Use the buttons below to modify settings • Only one trigger channel is supported per guild' })
+            .setFooter({ text: 'Sử dụng các nút bên dưới để sửa đổi cài đặt • Mỗi máy chủ chỉ hỗ trợ một kênh kích hoạt' })
             .setTimestamp();
 
-        
         const nameButton = new ButtonBuilder()
             .setCustomId(`jtc_config_name_${triggerChannel.id}`)
-            .setLabel('📝 Name Template')
+            .setLabel('📝 Sửa mẫu tên')
             .setStyle(ButtonStyle.Primary);
 
         const limitButton = new ButtonBuilder()
             .setCustomId(`jtc_config_limit_${triggerChannel.id}`)
-            .setLabel('👥 User Limit')
+            .setLabel('👥 Sửa giới hạn')
             .setStyle(ButtonStyle.Primary);
 
         const bitrateButton = new ButtonBuilder()
             .setCustomId(`jtc_config_bitrate_${triggerChannel.id}`)
-            .setLabel('🎵 Bitrate')
+            .setLabel('🎵 Sửa tốc độ bit')
             .setStyle(ButtonStyle.Primary);
 
         const deleteButton = new ButtonBuilder()
             .setCustomId(`jtc_config_delete_${triggerChannel.id}`)
-            .setLabel('🗑️ Remove Channel')
+            .setLabel('🗑️ Xóa kênh')
             .setStyle(ButtonStyle.Danger);
 
         const row = new ActionRowBuilder().addComponents(nameButton, limitButton, bitrateButton, deleteButton);
@@ -296,11 +290,10 @@ async function handleConfigSubcommand(interaction, client) {
             throw new LughxBotError(
                 'Failed to fetch interaction reply for collector setup',
                 ErrorTypes.DISCORD_API,
-                'Failed to open configuration controls. Please run `/jointocreate dashboard` again.'
+                'Không thể mở bảng điều khiển cấu hình. Vui lòng chạy lại lệnh `/jointocreate dashboard`.'
             );
         }
 
-        
         const collector = message.createMessageComponentCollector({
             componentType: ComponentType.Button,
             time: 300000
@@ -308,10 +301,9 @@ async function handleConfigSubcommand(interaction, client) {
 
         collector.on('collect', async (buttonInteraction) => {
             try {
-                
                 if (!hasManageGuildPermission(buttonInteraction.member)) {
                     await buttonInteraction.reply({
-                        content: '❌ You need **Manage Server** permission to use these controls.',
+                        content: '❌ Bạn cần quyền **Quản lý máy chủ** để sử dụng các bảng điều khiển này.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -330,8 +322,8 @@ async function handleConfigSubcommand(interaction, client) {
                 }
             } catch (error) {
                 const userMessage = error instanceof LughxBotError
-                    ? error.userMessage || 'An error occurred.'
-                    : 'An error occurred while processing your request.';
+                    ? error.userMessage || 'Đã có lỗi xảy ra.'
+                    : 'Đã có lỗi xảy ra khi xử lý yêu cầu của bạn.';
 
                 if (error instanceof LughxBotError) {
                     logger.debug(`Button interaction validation error: ${error.message}`, error.context || {});
@@ -356,7 +348,7 @@ async function handleConfigSubcommand(interaction, client) {
 
             message.edit({
                 components: [disabledRow],
-                embeds: [configEmbed.setFooter({ text: 'Configuration session expired. Run the command again to make changes.' })]
+                embeds: [configEmbed.setFooter({ text: 'Phiên cấu hình đã hết hạn. Hãy chạy lệnh một lần nữa để thực hiện thay đổi.' })]
             }).catch(() => {});
         });
 
@@ -367,7 +359,7 @@ async function handleConfigSubcommand(interaction, client) {
         throw new LughxBotError(
             `Config failed: ${error.message}`,
             ErrorTypes.DATABASE,
-            'Failed to load configuration.'
+            'Không thể tải cấu hình.'
         );
     }
 }
@@ -375,7 +367,7 @@ async function handleConfigSubcommand(interaction, client) {
 async function handleNameTemplateModal(interaction, triggerChannel, currentConfig, client) {
     try {
         const TEMPLATE_OPTIONS = [
-            { label: "{username}'s Room (Default)", value: "{username}'s Room" },
+            { label: "{username}'s Room (Mặc định)", value: "{username}'s Room" },
             { label: "{username}'s Channel",        value: "{username}'s Channel" },
             { label: "{username}'s Lounge",         value: "{username}'s Lounge" },
             { label: "{username}'s Space",          value: "{username}'s Space" },
@@ -393,7 +385,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
 
         const templateSelect = new StringSelectMenuBuilder()
             .setCustomId('template')
-            .setPlaceholder('Pick a name template...')
+            .setPlaceholder('Chọn mẫu tên...')
             .setOptions(
                 TEMPLATE_OPTIONS.map(o => ({
                     label: o.label,
@@ -403,12 +395,12 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
             );
 
         const templateLabel = new LabelBuilder()
-            .setLabel('Channel name template')
+            .setLabel('Mẫu tên kênh')
             .setStringSelectMenuComponent(templateSelect);
 
         const modal = new ModalBuilder()
             .setCustomId(`jtc_name_modal_${triggerChannel.id}`)
-            .setTitle('Channel Name Template')
+            .setTitle('Mẫu tên kênh')
             .addLabelComponents(templateLabel);
 
         await interaction.showModal(modal);
@@ -418,10 +410,9 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
             time: 60000
         });
 
-        // Recheck permissions
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ You need **Manage Server** permission to modify these settings.',
+                content: '❌ Bạn cần quyền **Quản lý máy chủ** để sửa đổi cài đặt này.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -439,7 +430,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
         });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('✅ Updated', `Channel name template changed to \`${newTemplate}\``)],
+            embeds: [successEmbed('✅ Đã cập nhật', `Mẫu tên kênh đã đổi thành \`${newTemplate}\``)],
             flags: MessageFlags.Ephemeral
         });
 
@@ -454,7 +445,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
         throw new LughxBotError(
             `Modal error: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while updating the template.'
+            'Đã có lỗi xảy ra khi cập nhật mẫu tên.'
         );
     }
 }
@@ -465,13 +456,13 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
 
         const modal = new ModalBuilder()
             .setCustomId(`jtc_limit_modal_${triggerChannel.id}`)
-            .setTitle('Configure User Limit')
+            .setTitle('Cấu hình giới hạn người dùng')
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
                         .setCustomId('user_limit')
-                        .setLabel('Enter user limit (0-99, 0 = unlimited)')
-                        .setPlaceholder('Enter a number between 0 and 99')
+                        .setLabel('Nhập giới hạn (0-99, 0 = không giới hạn)')
+                        .setPlaceholder('Nhập số từ 0 đến 99')
                         .setStyle(TextInputStyle.Short)
                         .setRequired(true)
                         .setMinLength(1)
@@ -487,10 +478,9 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
             time: 60000
         });
 
-        // Recheck permissions
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ You need **Manage Server** permission to modify these settings.',
+                content: '❌ Bạn cần quyền **Quản lý máy chủ** để sửa đổi cài đặt này.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -508,7 +498,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
         });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('✅ Updated', `User limit changed to ${parseInt(userInput) === 0 ? 'Unlimited' : parseInt(userInput) + ' users'}`)],
+            embeds: [successEmbed('✅ Đã cập nhật', `Giới hạn người dùng đã đổi thành ${parseInt(userInput) === 0 ? 'Không giới hạn' : parseInt(userInput) + ' người'}`)],
             flags: MessageFlags.Ephemeral
         });
 
@@ -523,7 +513,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
         throw new LughxBotError(
             `Modal error: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while updating the user limit.'
+            'Đã có lỗi xảy ra khi cập nhật giới hạn người dùng.'
         );
     }
 }
@@ -534,13 +524,13 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
 
         const modal = new ModalBuilder()
             .setCustomId(`jtc_bitrate_modal_${triggerChannel.id}`)
-            .setTitle('Configure Bitrate')
+            .setTitle('Cấu hình Tốc độ bit')
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
                         .setCustomId('bitrate')
-                        .setLabel('Enter bitrate in kbps (8-384)')
-                        .setPlaceholder('Enter a number between 8 and 384')
+                        .setLabel('Nhập tốc độ bit (kbps, 8-384)')
+                        .setPlaceholder('Nhập số từ 8 đến 384')
                         .setStyle(TextInputStyle.Short)
                         .setRequired(true)
                         .setMinLength(1)
@@ -556,10 +546,9 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
             time: 60000
         });
 
-        // Recheck permissions
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ You need **Manage Server** permission to modify these settings.',
+                content: '❌ Bạn cần quyền **Quản lý máy chủ** để sửa đổi cài đặt này.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -577,7 +566,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
         });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('✅ Updated', `Bitrate changed to ${parseInt(userInput)} kbps`)],
+            embeds: [successEmbed('✅ Đã cập nhật', `Tốc độ bit đã đổi thành ${parseInt(userInput)} kbps`)],
             flags: MessageFlags.Ephemeral
         });
 
@@ -592,7 +581,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
         throw new LughxBotError(
             `Modal error: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while updating the bitrate.'
+            'Đã có lỗi xảy ra khi cập nhật tốc độ bit.'
         );
     }
 }
@@ -603,16 +592,16 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
         const confirmRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(`jtc_delete_confirm_${triggerChannel.id}`)
-                .setLabel('🗑️ Yes, Delete')
+                .setLabel('🗑️ Có, Xóa')
                 .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
                 .setCustomId(`jtc_delete_cancel_${triggerChannel.id}`)
-                .setLabel('❌ Cancel')
+                .setLabel('❌ Hủy bỏ')
                 .setStyle(ButtonStyle.Secondary)
         );
 
         await InteractionHelper.safeReply(interaction, {
-            embeds: [errorEmbed('⚠️ Confirm Deletion', `Are you sure you want to remove **${triggerChannel.name}** from the Join to Create system?\n\nThis action cannot be undone.`)],
+            embeds: [errorEmbed('⚠️ Xác nhận xóa', `Bạn có chắc chắn muốn xóa **${triggerChannel.name}** khỏi hệ thống Join to Create không?\n\nHành động này không thể hoàn tác.`)],
             components: [confirmRow],
             flags: MessageFlags.Ephemeral
         });
@@ -629,10 +618,9 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
 
         deleteCollector.on('collect', async (buttonInteraction) => {
             try {
-                // Recheck permissions
                 if (!hasManageGuildPermission(buttonInteraction.member)) {
                     await buttonInteraction.reply({
-                        content: '❌ You need **Manage Server** permission to remove channels.',
+                        content: '❌ Bạn cần quyền **Quản lý máy chủ** để xóa kênh.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -642,37 +630,34 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
                     
                     await removeTriggerChannel(client, interaction.guild.id, triggerChannel.id);
 
-                    
                     await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Removed Join to Create trigger', {
                         channelId: triggerChannel.id,
                         channelName: triggerChannel.name
                     });
 
-                    
                     try {
                         if (triggerChannel.members.size === 0) {
-                            await triggerChannel.delete('Join to Create trigger removed by administrator');
+                            await triggerChannel.delete('Kênh kích hoạt Join to Create đã bị xóa bởi quản trị viên');
                         }
                     } catch (deleteError) {
                         logger.warn(`Could not delete channel ${triggerChannel.id}: ${deleteError.message}`);
-                        
                     }
 
                     await buttonInteraction.update({
-                        embeds: [successEmbed('✅ Removed', `**${triggerChannel.name}** has been removed from the Join to Create system.`)],
+                        embeds: [successEmbed('✅ Đã xóa', `**${triggerChannel.name}** đã bị xóa khỏi hệ thống Join to Create.`)],
                         components: []
                     });
 
                 } else {
                     await buttonInteraction.update({
-                        embeds: [successEmbed('✅ Cancelled', 'Channel removal has been cancelled.')],
+                        embeds: [successEmbed('✅ Đã hủy', 'Việc xóa kênh đã được hủy bỏ.')],
                         components: []
                     });
                 }
             } catch (collectError) {
                 logger.error('Error handling delete confirmation:', collectError);
                 await buttonInteraction.reply({
-                    content: '❌ An error occurred while processing your request.',
+                    content: '❌ Đã xảy ra lỗi khi xử lý yêu cầu của bạn.',
                     flags: MessageFlags.Ephemeral
                 }).catch(() => {});
             }
@@ -692,12 +677,7 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
         throw new LughxBotError(
             `Deletion error: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while removing the channel.'
+            'Đã có lỗi xảy ra khi xóa kênh.'
         );
     }
 }
-
-
-
-
-
