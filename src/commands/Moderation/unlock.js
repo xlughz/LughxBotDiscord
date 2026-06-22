@@ -9,15 +9,15 @@ export default {
     data: new SlashCommandBuilder()
         .setName("unlock")
         .setDescription(
-            "Unlocks the current channel (allows @everyone to send messages again).",
+            "Mở khóa kênh hiện tại (cho phép @everyone gửi tin nhắn trở lại).",
         )
-.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
     category: "moderation",
 
     async execute(interaction, config, client) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
-            logger.warn(`Unlock interaction defer failed`, {
+            logger.warn(`Lỗi defer tương tác lệnh unlock`, {
                 userId: interaction.user.id,
                 guildId: interaction.guildId,
                 commandName: 'unlock'
@@ -33,8 +33,8 @@ export default {
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        "Permission Denied",
-                        "You need the `Manage Channels` permission to unlock channels.",
+                        "Từ chối quyền truy cập",
+                        "Bạn cần quyền `Quản lý kênh` để mở khóa kênh.",
                     ),
                 ],
             });
@@ -53,8 +53,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Channel Already Unlocked",
-                            `${channel} is not explicitly locked (everyone can already send messages).`,
+                            "Kênh đã được mở khóa",
+                            `${channel} không bị khóa (mọi người đã có thể gửi tin nhắn).`,
                         ),
                     ],
                 });
@@ -65,23 +65,23 @@ export default {
                 { SendMessages: true },
                 {
                     type: 0,
-                    reason: `Channel unlocked by ${interaction.user.tag}`,
-},
+                    reason: `Kênh được mở khóa bởi ${interaction.user.tag}`,
+                },
             );
 
             const unlockEmbed = createEmbed(
-                "🔓 Channel Unlocked (Action Log)",
-                `${channel} has been unlocked by ${interaction.user}.`,
+                "🔓 Kênh đã được mở khóa (Nhật ký hành động)",
+                `${channel} đã được mở khóa bởi ${interaction.user}.`,
             )
-.setColor(getColor('success'))
+                .setColor(getColor('success'))
                 .addFields(
                     {
-                        name: "Channel",
+                        name: "Kênh",
                         value: channel.toString(),
                         inline: true,
                     },
                     {
-                        name: "Moderator",
+                        name: "Người điều hành",
                         value: `${interaction.user.tag} (${interaction.user.id})`,
                         inline: true,
                     },
@@ -91,12 +91,12 @@ export default {
                 client,
                 guild: interaction.guild,
                 event: {
-                    action: "Channel Unlocked",
+                    action: "Kênh đã được mở khóa",
                     target: channel.toString(),
                     executor: `${interaction.user.tag} (${interaction.user.id})`,
                     metadata: {
                         channelId: channel.id,
-                        category: channel.parent?.name || 'None'
+                        category: channel.parent?.name || 'Không có'
                     }
                 }
             });
@@ -104,23 +104,20 @@ export default {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        `🔓 **Channel Unlocked**`,
-                        `${channel} is now unlocked. You may speak now.`,
+                        `🔓 **Kênh đã được mở khóa**`,
+                        `${channel} hiện đã được mở khóa. Bạn có thể trò chuyện lại tại đây.`,
                     ),
                 ],
             });
         } catch (error) {
-            logger.error('Unlock command error:', error);
+            logger.error('Lỗi lệnh unlock:', error);
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        "An unexpected error occurred while trying to unlock the channel. Check my permissions (I need 'Manage Channels').",
+                        "Đã xảy ra lỗi không mong muốn khi mở khóa kênh. Hãy kiểm tra quyền hạn của bot (cần quyền 'Quản lý kênh').",
                     ),
                 ],
             });
         }
     }
 };
-
-
-

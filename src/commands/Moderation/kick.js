@@ -6,19 +6,19 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { LughxBotError, ErrorTypes } from '../../utils/errorHandler.js';
 
 export default {
-    data: new SlashCommandBuilder()
+  data: new SlashCommandBuilder()
     .setName("kick")
-    .setDescription("Kick a user from the server")
+    .setDescription("Đuổi (kick) một người dùng khỏi máy chủ")
     .addUserOption((option) =>
       option
         .setName("target")
-        .setDescription("The user to kick")
+        .setDescription("Người dùng muốn đuổi")
         .setRequired(true),
     )
     .addStringOption((option) =>
-      option.setName("reason").setDescription("Reason for the kick"),
+      option.setName("reason").setDescription("Lý do đuổi"),
     )
-.setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
+    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
   category: "moderation",
 
   async execute(interaction, config, client) {
@@ -28,20 +28,20 @@ export default {
         throw new LughxBotError(
           "User lacks permission",
           ErrorTypes.PERMISSION,
-          "You do not have permission to kick members."
+          "Bạn không có quyền đuổi thành viên."
         );
       }
 
       const targetUser = interaction.options.getUser("target");
       const member = interaction.options.getMember("target");
-      const reason = interaction.options.getString("reason") || "No reason provided";
+      const reason = interaction.options.getString("reason") || "Không có lý do nào được cung cấp";
 
       
       if (targetUser.id === interaction.user.id) {
         throw new LughxBotError(
           "Cannot kick self",
           ErrorTypes.VALIDATION,
-          "You cannot kick yourself."
+          "Bạn không thể tự đuổi chính mình."
         );
       }
 
@@ -50,7 +50,7 @@ export default {
         throw new LughxBotError(
           "Cannot kick bot",
           ErrorTypes.VALIDATION,
-          "You cannot kick the bot."
+          "Bạn không thể đuổi bot."
         );
       }
 
@@ -59,7 +59,7 @@ export default {
         throw new LughxBotError(
           "Target not found",
           ErrorTypes.USER_INPUT,
-          "The target user is not currently in this server.",
+          "Người dùng mục tiêu hiện không có trong máy chủ này.",
           { subtype: 'user_not_found' }
         );
       }
@@ -69,7 +69,7 @@ export default {
         throw new LughxBotError(
           "Cannot kick user",
           ErrorTypes.PERMISSION,
-          "You cannot kick a user with an equal or higher role than you."
+          "Bạn không thể đuổi một người dùng có vai trò cao hơn hoặc bằng bạn."
         );
       }
 
@@ -78,7 +78,7 @@ export default {
         throw new LughxBotError(
           "Bot cannot kick",
           ErrorTypes.PERMISSION,
-          "I cannot kick this user. Please check my role position relative to the target user."
+          "Tôi không thể đuổi người dùng này. Vui lòng kiểm tra vị trí vai trò của tôi so với người dùng mục tiêu."
         );
       }
 
@@ -105,21 +105,18 @@ export default {
       await InteractionHelper.universalReply(interaction, {
         embeds: [
           successEmbed(
-            `👢 **Kicked** ${targetUser.tag}`,
-            `**Reason:** ${reason}\n**Case ID:** #${caseId}`,
+            `👢 **Đã đuổi** ${targetUser.tag}`,
+            `**Lý do:** ${reason}\n**ID vụ việc:** #${caseId}`,
           ),
         ],
       });
     } catch (error) {
-      logger.error('Kick command error:', error);
+      logger.error('Lỗi lệnh kick:', error);
       const errorEmbed_default = errorEmbed(
-        "An unexpected error occurred while trying to kick the user.",
-        error.message || "Could not kick the user"
+        "Đã xảy ra lỗi không mong muốn khi cố gắng đuổi người dùng.",
+        error.message || "Không thể đuổi người dùng"
       );
       await InteractionHelper.universalReply(interaction, { embeds: [errorEmbed_default] });
     }
   }
 };
-
-
-

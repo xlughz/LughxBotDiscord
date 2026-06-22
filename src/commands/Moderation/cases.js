@@ -3,30 +3,31 @@ import { createEmbed, errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { getModerationCases } from '../../utils/moderation.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName('cases')
-        .setDescription('View moderation cases and audit logs')
+        .setDescription('Xem các vụ việc kiểm duyệt và nhật ký kiểm toán')
         .setDefaultMemberPermissions(PermissionFlagsBits.ViewAuditLog)
         .setDMPermission(false)
         .addStringOption(option =>
             option.setName('filter')
-                .setDescription('Filter cases by type or user')
+                .setDescription('Lọc các vụ việc theo loại hoặc người dùng')
                 .addChoices(
-                    { name: 'All Cases', value: 'all' },
-                    { name: 'Bans', value: 'Member Banned' },
-                    { name: 'Kicks', value: 'Member Kicked' },
-                    { name: 'Timeouts', value: 'Member Timed Out' },
-                    { name: 'Warnings', value: 'User Warned' }
+                    { name: 'Tất cả vụ việc', value: 'all' },
+                    { name: 'Cấm (Bans)', value: 'Member Banned' },
+                    { name: 'Đá (Kicks)', value: 'Member Kicked' },
+                    { name: 'Đình chỉ (Timeouts)', value: 'Member Timed Out' },
+                    { name: 'Cảnh báo (Warnings)', value: 'User Warned' }
                 )
         )
         .addUserOption(option =>
             option.setName('user')
-                .setDescription('Filter cases by specific user')
+                .setDescription('Lọc vụ việc theo một người dùng cụ thể')
         )
         .addIntegerOption(option =>
             option.setName('limit')
-                .setDescription('Number of cases to show (default: 10)')
+                .setDescription('Số lượng vụ việc muốn hiển thị (mặc định: 10)')
                 .setMinValue(1)
                 .setMaxValue(50)
         ),
@@ -34,7 +35,7 @@ export default {
     async execute(interaction, config, client) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
-            logger.warn(`Cases interaction defer failed`, {
+            logger.warn(`Lỗi defer tương tác lệnh cases`, {
                 userId: interaction.user.id,
                 guildId: interaction.guildId,
                 commandName: 'cases'
@@ -57,8 +58,8 @@ export default {
 
             if (cases.length === 0) {
                 throw new Error(targetUser 
-                    ? `No moderation cases found for ${targetUser.tag}`
-                    : `No ${filterType === 'all' ? '' : filterType} cases found in this server.`
+                    ? `Không tìm thấy vụ việc kiểm duyệt nào cho ${targetUser.tag}`
+                    : `Không tìm thấy ${filterType === 'all' ? '' : filterType} vụ việc kiểm duyệt nào trong máy chủ này.`
                 );
             }
 
@@ -72,8 +73,8 @@ export default {
                 const pageCases = cases.slice(startIndex, endIndex);
 
                 const embed = createEmbed({
-                    title: '📋 Moderation Cases',
-                    description: `Showing moderation cases for **${interaction.guild.name}**\n\n**Page ${page} of ${totalPages}**`
+                    title: '📋 Các vụ việc kiểm duyệt',
+                    description: `Hiển thị các vụ việc kiểm duyệt cho **${interaction.guild.name}**\n\n**Trang ${page} trên ${totalPages}**`
                 });
 
                 pageCases.forEach(case_ => {
@@ -81,14 +82,14 @@ export default {
                     const time = new Date(case_.createdAt).toLocaleTimeString();
                     
                     embed.addFields({
-                        name: `Case #${case_.caseId} - ${case_.action}`,
-                        value: `**Target:** ${case_.target}\n**Moderator:** ${case_.executor}\n**Date:** ${date} at ${time}\n**Reason:** ${case_.reason || 'No reason provided'}`,
+                        name: `Vụ việc #${case_.caseId} - ${case_.action}`,
+                        value: `**Đối tượng:** ${case_.target}\n**Người thực hiện:** ${case_.executor}\n**Ngày:** ${date} lúc ${time}\n**Lý do:** ${case_.reason || 'Không có lý do'}`,
                         inline: false
                     });
                 });
 
                 embed.setFooter({
-                    text: `Total cases: ${cases.length} | Filter: ${filterType}${targetUser ? ` | User: ${targetUser.tag}` : ''}`
+                    text: `Tổng số vụ việc: ${cases.length} | Lọc: ${filterType}${targetUser ? ` | Người dùng: ${targetUser.tag}` : ''}`
                 });
 
                 return embed;
@@ -99,19 +100,19 @@ export default {
                 
                 const prevButton = new ButtonBuilder()
                     .setCustomId('prev_page')
-                    .setLabel('⬅️ Previous')
+                    .setLabel('⬅️ Trước')
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(page === 1);
 
                 const pageInfoButton = new ButtonBuilder()
                     .setCustomId('page_info')
-                    .setLabel(`Page ${page}/${totalPages}`)
+                    .setLabel(`Trang ${page}/${totalPages}`)
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(true);
 
                 const nextButton = new ButtonBuilder()
                     .setCustomId('next_page')
-                    .setLabel('Next ➡️')
+                    .setLabel('Sau ➡️')
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(page === totalPages);
 
@@ -126,7 +127,7 @@ export default {
 
             const collector = message.createMessageComponentCollector({
                 componentType: ComponentType.Button,
-time: 120000
+                time: 120000
             });
 
             collector.on('collect', async (buttonInteraction) => {
@@ -134,7 +135,7 @@ time: 120000
 
                 if (buttonInteraction.user.id !== interaction.user.id) {
                     await buttonInteraction.followUp({
-                        content: 'You cannot use these buttons. Run `/cases` to get your own case view.',
+                        content: 'Bạn không thể sử dụng các nút này. Hãy chạy lệnh `/cases` để xem bảng vụ việc của riêng bạn.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -163,16 +164,17 @@ time: 120000
                         components: [disabledRow]
                     });
                 } catch (error) {
+                    logger.error('Lỗi khi tắt nút điều hướng cases:', error);
                 }
             });
 
         } catch (error) {
-            logger.error('Error in cases command:', error);
+            logger.error('Lỗi trong lệnh cases:', error);
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        'System Error',
-                        'An error occurred while retrieving moderation cases. Please try again later.'
+                        'Lỗi hệ thống',
+                        'Đã xảy ra lỗi khi truy xuất các vụ việc kiểm duyệt. Vui lòng thử lại sau.'
                     )
                 ],
                 flags: MessageFlags.Ephemeral
@@ -180,7 +182,3 @@ time: 120000
         }
     }
 };
-
-
-
-

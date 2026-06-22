@@ -5,34 +5,34 @@ import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ModerationService } from '../../services/moderationService.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("ban")
-        .setDescription("Ban a user from the server")
+        .setDescription("Cấm (ban) một người dùng khỏi máy chủ")
         .addUserOption((option) =>
             option
                 .setName("target")
-                .setDescription("The user to ban")
+                .setDescription("Người dùng muốn cấm")
                 .setRequired(true),
         )
         .addStringOption((option) =>
-            option.setName("reason").setDescription("Reason for the ban"),
+            option.setName("reason").setDescription("Lý do cấm"),
         )
-.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
     category: "moderation",
 
     async execute(interaction, config, client) {
         try {
             const user = interaction.options.getUser("target");
-            const reason = interaction.options.getString("reason") || "No reason provided";
+            const reason = interaction.options.getString("reason") || "Không có lý do nào được cung cấp";
 
             if (user.id === interaction.user.id) {
-                throw new Error("You cannot ban yourself.");
+                throw new Error("Bạn không thể tự cấm chính mình.");
             }
             if (user.id === client.user.id) {
-                throw new Error("You cannot ban the bot.");
+                throw new Error("Bạn không thể cấm bot.");
             }
-
             
             const result = await ModerationService.banUser({
                 guild: interaction.guild,
@@ -44,17 +44,14 @@ export default {
             await InteractionHelper.universalReply(interaction, {
                 embeds: [
                     successEmbed(
-                        `🚫 **Banned** ${user.tag}`,
-                        `**Reason:** ${reason}\n**Case ID:** #${result.caseId}`,
+                        `🚫 **Đã cấm** ${user.tag}`,
+                        `**Lý do:** ${reason}\n**ID vụ việc:** #${result.caseId}`,
                     ),
                 ],
             });
         } catch (error) {
-            logger.error('Ban command error:', error);
+            logger.error('Lỗi lệnh ban:', error);
             await handleInteractionError(interaction, error, { subtype: 'ban_failed' });
         }
     },
 };
-
-
-

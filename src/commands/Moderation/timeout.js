@@ -7,42 +7,42 @@ import { LughxBotError, ErrorTypes } from '../../utils/errorHandler.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 const durationChoices = [
-    { name: "5 minutes", value: 5 },
-    { name: "10 minutes", value: 10 },
-    { name: "30 minutes", value: 30 },
-    { name: "1 hour", value: 60 },
-    { name: "6 hours", value: 360 },
-    { name: "1 day", value: 1440 },
-    { name: "1 week", value: 10080 },
+    { name: "5 phút", value: 5 },
+    { name: "10 phút", value: 10 },
+    { name: "30 phút", value: 30 },
+    { name: "1 giờ", value: 60 },
+    { name: "6 giờ", value: 360 },
+    { name: "1 ngày", value: 1440 },
+    { name: "1 tuần", value: 10080 },
 ];
 export default {
     data: new SlashCommandBuilder()
         .setName("timeout")
-        .setDescription("Timeout a user for a specific duration.")
+        .setDescription("Đình chỉ (timeout) một người dùng trong một khoảng thời gian.")
         .addUserOption((option) =>
             option
                 .setName("target")
-                .setDescription("User to timeout")
+                .setDescription("Người dùng muốn đình chỉ")
                 .setRequired(true),
         )
         .addIntegerOption(
             (option) =>
                 option
                     .setName("duration")
-                    .setDescription("Duration of the timeout")
+                    .setDescription("Thời gian đình chỉ")
                     .setRequired(true)
-.addChoices(...durationChoices),
+                    .addChoices(...durationChoices),
         )
         .addStringOption((option) =>
-            option.setName("reason").setDescription("Reason for the timeout"),
+            option.setName("reason").setDescription("Lý do đình chỉ"),
         )
-.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
     category: "moderation",
 
     async execute(interaction, config, client) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
-            logger.warn(`Timeout interaction defer failed`, {
+            logger.warn(`Lỗi defer tương tác lệnh timeout`, {
                 userId: interaction.user.id,
                 guildId: interaction.guildId,
                 commandName: 'timeout'
@@ -55,34 +55,34 @@ export default {
                 throw new LughxBotError(
                     "User lacks permission",
                     ErrorTypes.PERMISSION,
-                    "You need the `Moderate Members` permission to set a timeout."
+                    "Bạn cần quyền `Quản lý thành viên` để thực hiện đình chỉ."
                 );
             }
 
             const targetUser = interaction.options.getUser("target");
             const member = interaction.options.getMember("target");
             const durationMinutes = interaction.options.getInteger("duration");
-            const reason = interaction.options.getString("reason") || "No reason provided";
+            const reason = interaction.options.getString("reason") || "Không có lý do nào được cung cấp";
 
             if (targetUser.id === interaction.user.id) {
                 throw new LughxBotError(
                     "Cannot timeout self",
                     ErrorTypes.VALIDATION,
-                    "You cannot timeout yourself."
+                    "Bạn không thể tự đình chỉ chính mình."
                 );
             }
             if (targetUser.id === client.user.id) {
                 throw new LughxBotError(
                     "Cannot timeout bot",
                     ErrorTypes.VALIDATION,
-                    "You cannot timeout the bot."
+                    "Bạn không thể đình chỉ bot."
                 );
             }
             if (!member) {
                 throw new LughxBotError(
                     "Target not found",
                     ErrorTypes.USER_INPUT,
-                    "The target user is not currently in this server."
+                    "Người dùng mục tiêu hiện không có trong máy chủ này."
                 );
             }
 
@@ -90,7 +90,7 @@ export default {
                 throw new LughxBotError(
                     "Cannot timeout member",
                     ErrorTypes.PERMISSION,
-                    "I cannot timeout this user. They might have a higher role than me or you."
+                    "Tôi không thể đình chỉ người dùng này. Có thể họ có vai trò cao hơn tôi hoặc bạn."
                 );
             }
 
@@ -99,7 +99,7 @@ export default {
 
             const durationDisplay =
                 durationChoices.find((c) => c.value === durationMinutes)
-                    ?.name || `${durationMinutes} minutes`;
+                    ?.name || `${durationMinutes} phút`;
 
             const caseId = await logModerationAction({
                 client,
@@ -108,7 +108,7 @@ export default {
                     action: "Member Timed Out",
                     target: `${targetUser.tag} (${targetUser.id})`,
                     executor: `${interaction.user.tag} (${interaction.user.id})`,
-                    reason: `${reason}\nDuration: ${durationDisplay}`,
+                    reason: `${reason}\nThời gian: ${durationDisplay}`,
                     duration: durationDisplay,
                     metadata: {
                         userId: targetUser.id,
@@ -122,23 +122,20 @@ export default {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        `⏳ **Timed out** ${targetUser.tag} for ${durationDisplay}.`,
-                        `**Reason:** ${reason}\n**Case ID:** #${caseId}`,
+                        `⏳ **Đã đình chỉ** ${targetUser.tag} trong ${durationDisplay}.`,
+                        `**Lý do:** ${reason}\n**ID vụ việc:** #${caseId}`,
                     ),
                 ],
             });
         } catch (error) {
-            logger.error('Timeout command error:', error);
+            logger.error('Lỗi lệnh timeout:', error);
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        error.userMessage || "An unexpected error occurred during the timeout action. Please check my role permissions.",
+                        error.userMessage || "Đã xảy ra lỗi không mong muốn khi thực hiện đình chỉ. Vui lòng kiểm tra quyền vai trò của bot.",
                     ),
                 ],
             });
         }
     }
 };
-
-
-

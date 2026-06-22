@@ -5,23 +5,24 @@ import { logger } from '../../utils/logger.js';
 import { ModerationService } from '../../services/moderationService.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("untimeout")
-        .setDescription("Remove timeout from a user")
+        .setDescription("Gỡ bỏ đình chỉ (timeout) của một người dùng")
         .addUserOption((option) =>
             option
                 .setName("target")
-                .setDescription("User to untimeout")
+                .setDescription("Người dùng muốn gỡ đình chỉ")
                 .setRequired(true),
         )
-.setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
     category: "moderation",
 
     async execute(interaction, config, client) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
-            logger.warn(`Untimeout interaction defer failed`, {
+            logger.warn(`Lỗi defer tương tác lệnh untimeout`, {
                 userId: interaction.user.id,
                 guildId: interaction.guildId,
                 commandName: 'untimeout'
@@ -30,29 +31,25 @@ export default {
         }
 
         try {
-                const targetUser = interaction.options.getUser("target");
-                const member = interaction.options.getMember("target");
+            const targetUser = interaction.options.getUser("target");
+            const member = interaction.options.getMember("target");
+            
+            const result = await ModerationService.removeTimeoutUser({
+                guild: interaction.guild,
+                member,
+                moderator: interaction.member
+            });
 
-                
-                const result = await ModerationService.removeTimeoutUser({
-                    guild: interaction.guild,
-                    member,
-                    moderator: interaction.member
-                });
-
-                await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [
-                        successEmbed(
-                            `🔓 **Removed timeout** from ${targetUser.tag}`,
-                        ),
-                    ],
-                });
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [
+                    successEmbed(
+                        `🔓 **Đã gỡ đình chỉ** cho ${targetUser.tag}`,
+                    ),
+                ],
+            });
         } catch (error) {
-            logger.error('Untimeout command error:', error);
+            logger.error('Lỗi lệnh untimeout:', error);
             await handleInteractionError(interaction, error, { subtype: 'untimeout_failed' });
         }
     }
 };
-
-
-

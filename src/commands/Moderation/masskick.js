@@ -8,16 +8,16 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("masskick")
-        .setDescription("Kick multiple users from the server at once")
+        .setDescription("Đuổi nhiều người dùng khỏi máy chủ cùng một lúc")
         .addStringOption(option =>
             option
                 .setName("users")
-                .setDescription("User IDs or mentions to kick (separated by spaces or commas)")
+                .setDescription("ID người dùng hoặc thẻ tag để đuổi (cách nhau bởi dấu cách hoặc dấu phẩy)")
                 .setRequired(true)
         )
         .addStringOption(option =>
             option.setName("reason")
-                .setDescription("Reason for the mass kick")
+                .setDescription("Lý do thực hiện đuổi hàng loạt")
                 .setRequired(false)
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
@@ -26,7 +26,7 @@ export default {
     async execute(interaction, config, client) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
-            logger.warn(`Masskick interaction defer failed`, {
+            logger.warn(`Lỗi defer tương tác lệnh masskick`, {
                 userId: interaction.user.id,
                 guildId: interaction.guildId,
                 commandName: 'masskick'
@@ -38,15 +38,15 @@ export default {
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        "Permission Denied",
-                        "You do not have permission to kick members."
+                        "Từ chối quyền truy cập",
+                        "Bạn không có quyền đuổi thành viên."
                     ),
                 ],
             });
         }
 
         const usersInput = interaction.options.getString("users");
-        const reason = interaction.options.getString("reason") || "Mass kick - No reason provided";
+        const reason = interaction.options.getString("reason") || "Đuổi hàng loạt - Không có lý do cụ thể";
 
         try {
             
@@ -56,8 +56,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         warningEmbed(
-                            "You're performing mass kicks too fast. Please wait a minute before trying again.",
-                            "⏳ Rate Limited"
+                            "Bạn đang thực hiện đuổi hàng loạt quá nhanh. Vui lòng đợi một phút trước khi thử lại.",
+                            "⏳ Giới hạn tốc độ (Rate Limited)"
                         ),
                     ],
                     flags: MessageFlags.Ephemeral,
@@ -65,17 +65,17 @@ export default {
             }
 
             const userIds = usersInput
-.replace(/<@!?(\d+)>/g, '$1')
-.split(/[\s,]+/)
-.filter(id => id && /^\d+$/.test(id))
-.slice(0, 20);
+                .replace(/<@!?(\d+)>/g, '$1')
+                .split(/[\s,]+/)
+                .filter(id => id && /^\d+$/.test(id))
+                .slice(0, 20);
 
             if (userIds.length === 0) {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Invalid Users",
-                            "Please provide valid user IDs or mentions. Maximum 20 users at once."
+                            "Người dùng không hợp lệ",
+                            "Vui lòng cung cấp ID người dùng hoặc thẻ tag hợp lệ. Tối đa 20 người cùng lúc."
                         ),
                     ],
                 });
@@ -85,8 +85,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Cannot Kick Self",
-                            "You cannot include yourself in a mass kick."
+                            "Không thể tự đuổi",
+                            "Bạn không thể bao gồm chính mình trong danh sách đuổi hàng loạt."
                         ),
                     ],
                 });
@@ -96,8 +96,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Cannot Kick Bot",
-                            "You cannot include the bot in a mass kick."
+                            "Không thể đuổi Bot",
+                            "Bạn không thể bao gồm bot trong danh sách đuổi hàng loạt."
                         ),
                     ],
                 });
@@ -114,7 +114,7 @@ export default {
                     const member = await interaction.guild.members.fetch(userId).catch(() => null);
                     
                     if (!member) {
-                        results.failed.push({ userId, reason: "User not in server" });
+                        results.failed.push({ userId, reason: "Người dùng không có trong máy chủ" });
                         continue;
                     }
 
@@ -123,7 +123,7 @@ export default {
                         results.skipped.push({ 
                             user: member.user.tag, 
                             userId, 
-                            reason: "Cannot kick user with equal or higher role" 
+                            reason: "Không thể đuổi người dùng có vai trò bằng hoặc cao hơn" 
                         });
                         continue;
                     }
@@ -142,7 +142,7 @@ export default {
                             action: "Member Kicked",
                             target: `${member.user.tag} (${member.user.id})`,
                             executor: `${interaction.user.tag} (${interaction.user.id})`,
-                            reason: `${reason} (Mass Kick)`,
+                            reason: `${reason} (Đuổi hàng loạt)`,
                             metadata: {
                                 userId: member.user.id,
                                 moderatorId: interaction.user.id,
@@ -152,18 +152,18 @@ export default {
                     });
 
                 } catch (error) {
-                    logger.error(`Failed to kick user ${userId}:`, error);
+                    logger.error(`Đuổi người dùng ${userId} thất bại:`, error);
                     results.failed.push({ 
                         userId, 
-                        reason: error.message || "Unknown error" 
+                        reason: error.message || "Lỗi không xác định" 
                     });
                 }
             }
 
-            let description = `**Mass Kick Results:**\n\n`;
+            let description = `**Kết quả đuổi hàng loạt:**\n\n`;
             
             if (results.successful.length > 0) {
-                description += `✅ **Successfully Kicked (${results.successful.length}):**\n`;
+                description += `✅ **Đã đuổi thành công (${results.successful.length}):**\n`;
                 results.successful.forEach(result => {
                     description += `• ${result.user} (${result.userId})\n`;
                 });
@@ -171,7 +171,7 @@ export default {
             }
 
             if (results.skipped.length > 0) {
-                description += `⚠️ **Skipped (${results.skipped.length}):**\n`;
+                description += `⚠️ **Đã bỏ qua (${results.skipped.length}):**\n`;
                 results.skipped.forEach(result => {
                     description += `• ${result.user} - ${result.reason}\n`;
                 });
@@ -179,7 +179,7 @@ export default {
             }
 
             if (results.failed.length > 0) {
-                description += `❌ **Failed (${results.failed.length}):**\n`;
+                description += `❌ **Thất bại (${results.failed.length}):**\n`;
                 results.failed.forEach(result => {
                     description += `• ${result.userId} - ${result.reason}\n`;
                 });
@@ -190,25 +190,22 @@ export default {
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     embed(
-                        `👢 Mass Kick Completed`,
+                        `👢 Đuổi hàng loạt hoàn tất`,
                         description
                     )
                 ]
             });
 
         } catch (error) {
-            logger.error("Error in masskick command:", error);
+            logger.error("Lỗi trong lệnh masskick:", error);
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        "System Error",
-                        "An error occurred while processing the mass kick. Please try again later."
+                        "Lỗi hệ thống",
+                        "Đã xảy ra lỗi khi xử lý việc đuổi hàng loạt. Vui lòng thử lại sau."
                     ),
                 ],
             });
         }
     }
 };
-
-
-

@@ -7,105 +7,102 @@ import { getColor } from '../../config/bot.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
-    .setName("lock")
-    .setDescription(
-      "Locks the current channel (prevents @everyone from sending messages).",
-    )
-.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
-  category: "moderation",
+        .setName("lock")
+        .setDescription(
+            "Khóa kênh hiện tại (ngăn @everyone gửi tin nhắn).",
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
+    category: "moderation",
 
-  async execute(interaction, config, client) {
-    const deferSuccess = await InteractionHelper.safeDefer(interaction);
-    if (!deferSuccess) {
-      logger.warn(`Lock interaction defer failed`, {
-        userId: interaction.user.id,
-        guildId: interaction.guildId,
-        commandName: 'lock'
-      });
-      return;
-    }
-
-    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels))
-      return await InteractionHelper.safeEditReply(interaction, {
-        embeds: [
-          errorEmbed(
-            "Permission Denied",
-            "You need the `Manage Channels` permission to lock channels.",
-          ),
-        ],
-      });
-
-    const channel = interaction.channel;
-    const everyoneRole = interaction.guild.roles.everyone;
-
-    try {
-      const currentPermissions = channel.permissionsFor(everyoneRole);
-      if (currentPermissions.has(PermissionFlagsBits.SendMessages) === false) {
-        return await InteractionHelper.safeEditReply(interaction, {
-          embeds: [
-            errorEmbed(
-              "Channel Already Locked",
-              `${channel} is already locked.`,
-            ),
-          ],
-        });
-      }
-
-      await channel.permissionOverwrites.edit(
-        everyoneRole,
-        { SendMessages: false },
-{ type: 0, reason: `Channel locked by ${interaction.user.tag}` },
-      );
-
-      const lockEmbed = createEmbed(
-        "🔒 Channel Locked (Action Log)",
-        `${channel} has been locked down by ${interaction.user}.`,
-      )
-.setColor(getColor('moderation'))
-        .addFields(
-          { name: "Channel", value: channel.toString(), inline: true },
-          {
-            name: "Moderator",
-            value: `${interaction.user.tag} (${interaction.user.id})`,
-            inline: true,
-          },
-        );
-
-      await logEvent({
-        client,
-        guild: interaction.guild,
-        event: {
-          action: "Channel Locked",
-          target: channel.toString(),
-          executor: `${interaction.user.tag} (${interaction.user.id})`,
-          metadata: {
-            channelId: channel.id,
-            category: channel.parent?.name || 'None',
-            moderatorId: interaction.user.id
-          }
+    async execute(interaction, config, client) {
+        const deferSuccess = await InteractionHelper.safeDefer(interaction);
+        if (!deferSuccess) {
+            logger.warn(`Lỗi defer tương tác lệnh lock`, {
+                userId: interaction.user.id,
+                guildId: interaction.guildId,
+                commandName: 'lock'
+            });
+            return;
         }
-      });
 
-      await InteractionHelper.safeEditReply(interaction, {
-        embeds: [
-          successEmbed(
-            `🔒 **Channel Locked**`,
-            `${channel} is now locked down. No one can speak here now.`,
-          ),
-        ],
-      });
-    } catch (error) {
-      logger.error('Lock command error:', error);
-      await InteractionHelper.safeEditReply(interaction, {
-        embeds: [
-          errorEmbed(
-            "An unexpected error occurred while trying to lock the channel. Check my permissions (I need 'Manage Channels').",
-          ),
-        ],
-      });
+        if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels))
+            return await InteractionHelper.safeEditReply(interaction, {
+                embeds: [
+                    errorEmbed(
+                        "Từ chối quyền truy cập",
+                        "Bạn cần quyền `Quản lý kênh` để khóa kênh.",
+                    ),
+                ],
+            });
+
+        const channel = interaction.channel;
+        const everyoneRole = interaction.guild.roles.everyone;
+
+        try {
+            const currentPermissions = channel.permissionsFor(everyoneRole);
+            if (currentPermissions.has(PermissionFlagsBits.SendMessages) === false) {
+                return await InteractionHelper.safeEditReply(interaction, {
+                    embeds: [
+                        errorEmbed(
+                            "Kênh đã bị khóa",
+                            `${channel} đã bị khóa từ trước.`,
+                        ),
+                    ],
+                });
+            }
+
+            await channel.permissionOverwrites.edit(
+                everyoneRole,
+                { SendMessages: false },
+                { type: 0, reason: `Kênh được khóa bởi ${interaction.user.tag}` },
+            );
+
+            const lockEmbed = createEmbed(
+                "🔒 Kênh đã bị khóa (Nhật ký hành động)",
+                `${channel} đã bị khóa bởi ${interaction.user}.`,
+            )
+                .setColor(getColor('moderation'))
+                .addFields(
+                    { name: "Kênh", value: channel.toString(), inline: true },
+                    {
+                        name: "Người điều hành",
+                        value: `${interaction.user.tag} (${interaction.user.id})`,
+                        inline: true,
+                    },
+                );
+
+            await logEvent({
+                client,
+                guild: interaction.guild,
+                event: {
+                    action: "Kênh đã bị khóa",
+                    target: channel.toString(),
+                    executor: `${interaction.user.tag} (${interaction.user.id})`,
+                    metadata: {
+                        channelId: channel.id,
+                        category: channel.parent?.name || 'Không có',
+                        moderatorId: interaction.user.id
+                    }
+                }
+            });
+
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [
+                    successEmbed(
+                        `🔒 **Kênh đã bị khóa**`,
+                        `${channel} hiện đã bị khóa. Không ai có thể gửi tin nhắn tại đây nữa.`,
+                    ),
+                ],
+            });
+        } catch (error) {
+            logger.error('Lỗi lệnh lock:', error);
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [
+                    errorEmbed(
+                        "Đã xảy ra lỗi không mong muốn khi cố gắng khóa kênh. Hãy kiểm tra quyền hạn của bot (cần quyền 'Quản lý kênh').",
+                    ),
+                ],
+            });
+        }
     }
-  }
 };
-
-
-

@@ -4,20 +4,11 @@ import { logger } from '../../utils/logger.js';
 import { getFromDb, setInDb, deleteFromDb } from '../../utils/database.js';
 import { sanitizeInput } from '../../utils/sanitization.js';
 
-
-
-
-
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 function getUserNotesKey(guildId, userId) {
     return `moderation_user_notes_${guildId}_${userId}`;
 }
-
-
-
-
-
 
 function getGuildNotesListKey(guildId) {
     return `moderation_user_notes_list_${guildId}`;
@@ -26,32 +17,32 @@ function getGuildNotesListKey(guildId) {
 export default {
     data: new SlashCommandBuilder()
         .setName("usernotes")
-        .setDescription("Manage user notes for moderation purposes")
+        .setDescription("Quản lý ghi chú người dùng cho mục đích kiểm duyệt")
         .addSubcommand(subcommand =>
             subcommand
                 .setName("add")
-                .setDescription("Add a note to a user")
+                .setDescription("Thêm một ghi chú cho người dùng")
                 .addUserOption(option =>
                     option
                         .setName("target")
-                        .setDescription("The user to add a note for")
+                        .setDescription("Người dùng muốn thêm ghi chú")
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option
                         .setName("note")
-                        .setDescription("The note to add")
+                        .setDescription("Nội dung ghi chú")
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option
                         .setName("type")
-                        .setDescription("Type of note")
+                        .setDescription("Loại ghi chú")
                         .addChoices(
-                            { name: "Warning", value: "warning" },
-                            { name: "Positive", value: "positive" },
-                            { name: "Neutral", value: "neutral" },
-                            { name: "Alert", value: "alert" }
+                            { name: "Cảnh báo", value: "warning" },
+                            { name: "Tích cực", value: "positive" },
+                            { name: "Trung lập", value: "neutral" },
+                            { name: "Khẩn cấp", value: "alert" }
                         )
                         .setRequired(false)
                 )
@@ -59,28 +50,28 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("view")
-                .setDescription("View notes for a user")
+                .setDescription("Xem ghi chú của một người dùng")
                 .addUserOption(option =>
                     option
                         .setName("target")
-                        .setDescription("The user to view notes for")
+                        .setDescription("Người dùng muốn xem ghi chú")
                         .setRequired(true)
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("remove")
-                .setDescription("Remove a specific note from a user")
+                .setDescription("Xóa một ghi chú cụ thể của người dùng")
                 .addUserOption(option =>
                     option
                         .setName("target")
-                        .setDescription("The user to remove a note from")
+                        .setDescription("Người dùng muốn xóa ghi chú")
                         .setRequired(true)
                 )
                 .addIntegerOption(option =>
                     option
                         .setName("index")
-                        .setDescription("The index of the note to remove")
+                        .setDescription("Số thứ tự của ghi chú muốn xóa")
                         .setRequired(true)
                         .setMinValue(1)
                 )
@@ -88,11 +79,11 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("clear")
-                .setDescription("Clear all notes for a user")
+                .setDescription("Xóa tất cả ghi chú của một người dùng")
                 .addUserOption(option =>
                     option
                         .setName("target")
-                        .setDescription("The user to clear notes for")
+                        .setDescription("Người dùng muốn xóa sạch ghi chú")
                         .setRequired(true)
                 )
         )
@@ -104,8 +95,8 @@ export default {
             return InteractionHelper.safeReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        "Permission Denied",
-                        "You do not have permission to manage user notes."
+                        "Từ chối quyền truy cập",
+                        "Bạn không có quyền quản lý ghi chú người dùng."
                     ),
                 ],
             });
@@ -115,12 +106,12 @@ export default {
         const targetUser = interaction.options.getUser("target");
         const guildId = interaction.guild.id;
 
-        if (subcommand !== "view" && subcommand !== "remove" && subcommand !== "clear" && subcommand !== "add") {
+        if (!["view", "remove", "clear", "add"].includes(subcommand)) {
             return InteractionHelper.safeReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        "Invalid Subcommand",
-                        "Please select a valid subcommand."
+                        "Lệnh con không hợp lệ",
+                        "Vui lòng chọn một lệnh con hợp lệ."
                     ),
                 ],
             });
@@ -146,19 +137,19 @@ export default {
                     return InteractionHelper.safeReply(interaction, {
                         embeds: [
                             errorEmbed(
-                                "Invalid Subcommand",
-                                "Please select a valid subcommand."
+                                "Lệnh con không hợp lệ",
+                                "Vui lòng chọn một lệnh con hợp lệ."
                             ),
                         ],
                     });
             }
         } catch (error) {
-            logger.error(`Error in usernotes command (${subcommand}):`, error);
+            logger.error(`Lỗi trong lệnh usernotes (${subcommand}):`, error);
             return InteractionHelper.safeReply(interaction, {
                 embeds: [
                     errorEmbed(
-                        "System Error",
-                        "An error occurred while processing your request. Please try again later."
+                        "Lỗi hệ thống",
+                        "Đã xảy ra lỗi khi xử lý yêu cầu của bạn. Vui lòng thử lại sau."
                     ),
                 ],
                 flags: MessageFlags.Ephemeral
@@ -175,8 +166,8 @@ async function handleAddNote(interaction, targetUser, notes, guildId) {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 errorEmbed(
-                    "Note Too Long",
-                    "Notes must be 1000 characters or less."
+                    "Ghi chú quá dài",
+                    "Ghi chú phải dưới 1000 ký tự."
                 ),
             ],
         });
@@ -186,14 +177,13 @@ async function handleAddNote(interaction, targetUser, notes, guildId) {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 errorEmbed(
-                    "Empty Note",
-                    "Note cannot be empty."
+                    "Ghi chú trống",
+                    "Ghi chú không được để trống."
                 ),
             ],
         });
     }
 
-    
     note = sanitizeInput(note);
 
     const noteData = {
@@ -215,11 +205,11 @@ async function handleAddNote(interaction, targetUser, notes, guildId) {
     return InteractionHelper.safeReply(interaction, {
         embeds: [
             successEmbed(
-                `${typeInfo.emoji} Note Added`,
-                `Added a **${type}** note for **${targetUser.tag}**:\n\n` +
+                `${typeInfo.emoji} Đã thêm ghi chú`,
+                `Đã thêm ghi chú **${type}** cho **${targetUser.tag}**:\n\n` +
                 `> ${note}\n\n` +
-                `**Moderator:** ${interaction.user.tag}\n` +
-                `**Total Notes:** ${notes.length}`
+                `**Người điều hành:** ${interaction.user.tag}\n` +
+                `**Tổng số ghi chú:** ${notes.length}`
             )
         ]
     });
@@ -230,8 +220,8 @@ async function handleViewNotes(interaction, targetUser, notes) {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 infoEmbed(
-                    "📝 No Notes",
-                    `There are no notes for **${targetUser.tag}**.`
+                    "📝 Không có ghi chú",
+                    `Không có ghi chú nào cho **${targetUser.tag}**.`
                 ),
             ],
         });
@@ -239,24 +229,24 @@ async function handleViewNotes(interaction, targetUser, notes) {
 
     const sortedNotes = [...notes].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    let description = `**Notes for ${targetUser.tag} (${targetUser.id}):**\n\n`;
+    let description = `**Ghi chú cho ${targetUser.tag} (${targetUser.id}):**\n\n`;
     
     sortedNotes.forEach((note, index) => {
         const typeInfo = getNoteTypeInfo(note.type);
         const date = new Date(note.timestamp).toLocaleDateString();
-        description += `${typeInfo.emoji} **Note #${index + 1}** (${note.type}) - ${date}\n`;
+        description += `${typeInfo.emoji} **Ghi chú #${index + 1}** (${note.type}) - ${date}\n`;
         description += `> ${note.content}\n`;
-        description += `*Added by ${note.author}*\n\n`;
+        description += `*Thêm bởi ${note.author}*\n\n`;
     });
 
     if (description.length > 4000) {
-        description = description.substring(0, 3900) + "\n... *(truncated)*";
+        description = description.substring(0, 3900) + "\n... *(đã cắt bớt)*";
     }
 
     return InteractionHelper.safeReply(interaction, {
         embeds: [
             infoEmbed(
-                `📝 User Notes (${notes.length})`,
+                `📝 Ghi chú người dùng (${notes.length})`,
                 description
             )
         ]
@@ -264,14 +254,14 @@ async function handleViewNotes(interaction, targetUser, notes) {
 }
 
 async function handleRemoveNote(interaction, targetUser, notes, guildId) {
-const index = interaction.options.getInteger("index") - 1;
+    const index = interaction.options.getInteger("index") - 1;
 
     if (index < 0 || index >= notes.length) {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 errorEmbed(
-                    "Invalid Index",
-                    `Please provide a valid note index (1-${notes.length}).`
+                    "Chỉ số không hợp lệ",
+                    `Vui lòng cung cấp chỉ số ghi chú hợp lệ (1-${notes.length}).`
                 ),
             ],
         });
@@ -288,10 +278,10 @@ const index = interaction.options.getInteger("index") - 1;
     return InteractionHelper.safeReply(interaction, {
         embeds: [
             successEmbed(
-                `${typeInfo.emoji} Note Removed`,
-                `Removed note #${index + 1} from **${targetUser.tag}**:\n\n` +
+                `${typeInfo.emoji} Đã xóa ghi chú`,
+                `Đã xóa ghi chú #${index + 1} của **${targetUser.tag}**:\n\n` +
                 `> ${removedNote.content}\n\n` +
-                `**Remaining Notes:** ${notes.length}`
+                `**Số ghi chú còn lại:** ${notes.length}`
             )
         ]
     });
@@ -304,8 +294,8 @@ async function handleClearNotes(interaction, targetUser, notes, guildId) {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 infoEmbed(
-                    "No Notes to Clear",
-                    `There are no notes for **${targetUser.tag}** to clear.`
+                    "Không có ghi chú để xóa",
+                    `**${targetUser.tag}** không có ghi chú nào để xóa.`
                 ),
             ],
         });
@@ -319,8 +309,8 @@ async function handleClearNotes(interaction, targetUser, notes, guildId) {
     return InteractionHelper.safeReply(interaction, {
         embeds: [
             successEmbed(
-                "🗑️ Notes Cleared",
-                `Cleared **${noteCount}** notes from **${targetUser.tag}**.`
+                "🗑️ Đã xóa sạch ghi chú",
+                `Đã xóa sạch **${noteCount}** ghi chú của **${targetUser.tag}**.`
             )
         ]
     });
@@ -336,8 +326,3 @@ function getNoteTypeInfo(type) {
     
     return types[type] || types.neutral;
 }
-
-
-
-
-
