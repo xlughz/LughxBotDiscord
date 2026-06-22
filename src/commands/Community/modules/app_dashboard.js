@@ -38,75 +38,75 @@ import {
 // ─── Embed & Menu Builders ────────────────────────────────────────────────────
 
 function buildDashboardEmbed(settings, roles, guild) {
-    const logChannel = settings.logChannelId ? `<#${settings.logChannelId}>` : '`Not set`';
+    const logChannel = settings.logChannelId ? `<#${settings.logChannelId}>` : '`Chưa cấu hình`';
     const managerRoleList =
         settings.managerRoles?.length > 0
             ? settings.managerRoles.map(id => `<@&${id}>`).join(', ')
-            : '`None configured`';
+            : '`Chưa cấu hình`';
     const roleList =
         roles.length > 0
             ? roles.map(r => `<@&${r.roleId}> — ${r.name}`).join('\n')
-            : '`No application roles configured`';
+            : '`Chưa cấu hình role ứng tuyển nào`';
     const questionCount = settings.questions?.length ?? 0;
     const firstQ =
         settings.questions?.[0]
             ? `\`${settings.questions[0].length > 55 ? settings.questions[0].substring(0, 55) + '…' : settings.questions[0]}\``
-            : '`Not set`';
+            : '`Chưa đặt`';
 
     return new EmbedBuilder()
-        .setTitle('📋 Applications Dashboard')
-        .setDescription(`Manage application settings for **${guild.name}**.\nSelect an option below to modify a setting.`)
+        .setTitle('📋 Bảng Điều Khiển Đơn Ứng Tuyển')
+        .setDescription(`Quản lý cài đặt ứng tuyển cho **${guild.name}**.\nChọn một tuỳ chọn bên dưới để thay đổi cài đặt.`)
         .setColor(getColor('info'))
         .addFields(
-            { name: '⚙️ Application Status', value: settings.enabled ? '✅ Enabled' : '❌ Disabled', inline: true },
-            { name: '📢 Log Channel', value: logChannel, inline: true },
+            { name: '⚙️ Trạng Thái Hệ Thống', value: settings.enabled ? '✅ Đã bật' : '❌ Đã tắt', inline: true },
+            { name: '📢 Kênh Log', value: logChannel, inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
-            { name: '🛡️ Manager Roles', value: managerRoleList, inline: false },
-            { name: '📝 Questions', value: `${questionCount} configured — first: ${firstQ}`, inline: false },
-            { name: '🎭 Application Roles', value: roleList, inline: false },
+            { name: '🛡️ Role Quản Lý', value: managerRoleList, inline: false },
+            { name: '📝 Câu Hỏi', value: `Đã thiết lập ${questionCount} câu — câu đầu: ${firstQ}`, inline: false },
+            { name: '🎭 Role Ứng Tuyển', value: roleList, inline: false },
             {
-                name: '🗑️ Retention',
-                value: `Pending: **${settings.pendingApplicationRetentionDays ?? 30}d** · Reviewed: **${settings.reviewedApplicationRetentionDays ?? 14}d**`,
+                name: '🗑️ Thời Gian Lưu Trữ Đơn',
+                value: `Chờ duyệt: **${settings.pendingApplicationRetentionDays ?? 30} ngày** · Đã duyệt: **${settings.reviewedApplicationRetentionDays ?? 14} ngày**`,
                 inline: false,
             },
         )
-        .setFooter({ text: 'Dashboard closes after 15 minutes of inactivity' })
+        .setFooter({ text: 'Bảng điều khiển sẽ đóng sau 15 phút không hoạt động' })
         .setTimestamp();
 }
 
 function buildSelectMenu(guildId) {
     return new StringSelectMenuBuilder()
         .setCustomId(`app_cfg_${guildId}`)
-        .setPlaceholder('Select a setting to configure...')
+        .setPlaceholder('Chọn một cài đặt để cấu hình...')
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Log Channel')
-                .setDescription('Set the channel where new applications are logged')
+                .setLabel('Kênh Log')
+                .setDescription('Đặt kênh nhận thông báo các đơn ứng tuyển mới')
                 .setValue('log_channel')
                 .setEmoji('📢'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Manager Roles')
-                .setDescription('Add or remove a role that can manage applications')
+                .setLabel('Role Quản Lý')
+                .setDescription('Thêm/xoá role có quyền quản lý đơn ứng tuyển')
                 .setValue('manager_role')
                 .setEmoji('🛡️'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Edit Questions')
-                .setDescription('Customise the questions shown on the application form')
+                .setLabel('Chỉnh Sửa Câu Hỏi')
+                .setDescription('Tuỳ chỉnh các câu hỏi hiển thị trong form ứng tuyển')
                 .setValue('questions')
                 .setEmoji('📝'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Add Application Role')
-                .setDescription('Add a role that members can apply for')
+                .setLabel('Thêm Role Ứng Tuyển')
+                .setDescription('Thêm một role để thành viên nộp đơn xin cấp')
                 .setValue('role_add')
                 .setEmoji('➕'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Remove Application Role')
-                .setDescription('Remove a role from the applications list')
+                .setLabel('Xoá Role Ứng Tuyển')
+                .setDescription('Xoá một role khỏi danh sách ứng tuyển')
                 .setValue('role_remove')
                 .setEmoji('➖'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Retention Period')
-                .setDescription('Set how long pending and reviewed applications are kept')
+                .setLabel('Thời Gian Lưu Trữ')
+                .setDescription('Đặt thời gian giữ lại đơn chờ duyệt và đơn đã duyệt')
                 .setValue('retention')
                 .setEmoji('🗑️'),
         );
@@ -117,7 +117,7 @@ function buildButtonRow(settings, guildId, disabled = false) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`app_cfg_toggle_${guildId}`)
-            .setLabel('Applications')
+            .setLabel('Hệ Thống Ứng Tuyển')
             .setStyle(systemOn ? ButtonStyle.Success : ButtonStyle.Danger)
             .setDisabled(disabled),
     );
@@ -160,9 +160,9 @@ export default {
 
             if (isCompletelyUnconfigured) {
                 throw new LughxBotError(
-                    'Applications system not set up',
+                    'Hệ thống ứng tuyển chưa được thiết lập',
                     ErrorTypes.CONFIGURATION,
-                    'The applications system has not been configured yet. Please run `/app-admin setup` to create your first application.',
+                    'Hệ thống ứng tuyển chưa được cấu hình. Vui lòng chạy lệnh `/app-admin setup` để tạo form ứng tuyển đầu tiên.',
                 );
             }
 
@@ -190,9 +190,9 @@ export default {
             if (error instanceof LughxBotError) throw error;
             logger.error('Unexpected error in app_dashboard:', error);
             throw new LughxBotError(
-                `Applications dashboard failed: ${error.message}`,
+                `Lỗi tải bảng điều khiển: ${error.message}`,
                 ErrorTypes.UNKNOWN,
-                'Failed to open the applications dashboard.',
+                'Không thể mở bảng điều khiển hệ thống ứng tuyển.',
             );
         }
     },
@@ -203,20 +203,20 @@ export default {
 async function showApplicationSelector(interaction, roles, settings, guildId, client) {
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`app_select_${guildId}`)
-        .setPlaceholder('Select an application to configure...')
+        .setPlaceholder('Chọn một form ứng tuyển để cấu hình...')
         .addOptions(
             roles.map(role =>
                 new StringSelectMenuOptionBuilder()
                     .setLabel(role.name)
-                    .setDescription(`Configure the ${role.name} application`)
+                    .setDescription(`Cấu hình hệ thống ứng tuyển cho role ${role.name}`)
                     .setValue(role.roleId)
                     .setEmoji('📋'),
             ),
         );
 
     const embed = new EmbedBuilder()
-        .setTitle('🎯 Select Application')
-        .setDescription('Choose which application role you want to configure.')
+        .setTitle('🎯 Chọn Form Ứng Tuyển')
+        .setDescription('Vui lòng chọn role ứng tuyển mà bạn muốn cấu hình.')
         .setColor(getColor('info'));
 
     await InteractionHelper.safeEditReply(interaction, {
@@ -247,7 +247,7 @@ async function showApplicationSelector(interaction, roles, settings, guildId, cl
     collector.on('end', (collected, reason) => {
         if (reason === 'time' && collected.size === 0) {
             InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('Timed Out', 'No selection was made. The dashboard has closed.')],
+                embeds: [errorEmbed('Hết Giờ', 'Chưa có lựa chọn nào được đưa ra. Bảng điều khiển đã đóng.')],
                 components: [],
             }).catch(() => {});
         }
@@ -284,19 +284,19 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
     // Build comprehensive embed
     const logChannelDisplay = appLogChannelId 
         ? `<#${appLogChannelId}>` 
-        : '`Inherits global log channel`';
+        : '`Kế thừa kênh log chung`';
     
     const questionsDisplay = questions.length > 0
         ? questions.map((q, i) => `${i + 1}. \`${q.length > 60 ? q.substring(0, 60) + '…' : q}\``).join('\n')
-        : '`Inherits global questions`';
+        : '`Kế thừa bộ câu hỏi chung`';
     
     const managerRolesDisplay = settings.managerRoles && settings.managerRoles.length > 0
         ? settings.managerRoles.map(id => `<@&${id}>`).join(', ')
-        : '`None configured`';
+        : '`Chưa cấu hình`';
 
     const embed = new EmbedBuilder()
-        .setTitle('🎭 Application Dashboard')
-        .setDescription(`Configuration for **${selectedRole.name}**`)
+        .setTitle('🎭 Bảng Điều Khiển Form Ứng Tuyển')
+        .setDescription(`Đang cấu hình cho **${selectedRole.name}**`)
         .setColor(isEnabled ? getColor('success') : getColor('error'))
         .addFields(
             { 
@@ -305,33 +305,33 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
                 inline: true 
             },
             { 
-                name: '⚙️ Application Status', 
-                value: isEnabled ? '✅ **Enabled**' : '❌ **Disabled**', 
+                name: '⚙️ Trạng Thái', 
+                value: isEnabled ? '✅ **Đã bật**' : '❌ **Đã tắt**', 
                 inline: true 
             },
             { name: '\u200B', value: '\u200B', inline: true },
             { 
-                name: '📝 Questions', 
+                name: '📝 Câu Hỏi', 
                 value: questionsDisplay,
                 inline: false 
             },
             { 
-                name: '📢 Log Channel', 
+                name: '📢 Kênh Log', 
                 value: logChannelDisplay,
                 inline: true 
             },
             { 
-                name: '🛡️ Manager Roles',
+                name: '🛡️ Role Quản Lý',
                 value: managerRolesDisplay,
                 inline: true 
             },
             { 
-                name: '🗑️ Retention Period',
-                value: `Pending: **${settings.pendingApplicationRetentionDays ?? 30}d** · Reviewed: **${settings.reviewedApplicationRetentionDays ?? 14}d**`,
+                name: '🗑️ Thời Gian Lưu Trữ Đơn',
+                value: `Chờ duyệt: **${settings.pendingApplicationRetentionDays ?? 30} ngày** · Đã duyệt: **${settings.reviewedApplicationRetentionDays ?? 14} ngày**`,
                 inline: false 
             },
         )
-        .setFooter({ text: 'Dashboard closes after 10 minutes of inactivity' })
+        .setFooter({ text: 'Bảng điều khiển sẽ đóng sau 10 phút không hoạt động' })
         .setTimestamp();
 
     // Create dropdown button with customization options
@@ -341,11 +341,11 @@ async function showApplicationDashboard(rootInteraction, selectedRole, settings,
     const controlButtons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`app_toggle_${selectedRole.roleId}`)
-            .setLabel(isEnabled ? 'Disable Application' : 'Enable Application')
+            .setLabel(isEnabled ? 'Tắt Form Ứng Tuyển' : 'Bật Form Ứng Tuyển')
             .setStyle(isEnabled ? ButtonStyle.Danger : ButtonStyle.Success),
         new ButtonBuilder()
             .setCustomId(`app_delete_${selectedRole.roleId}`)
-            .setLabel('Delete Application')
+            .setLabel('Xoá Form Ứng Tuyển')
             .setStyle(ButtonStyle.Danger)
             .setEmoji('🗑️'),
     );
@@ -411,8 +411,8 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
             const errorMessage =
                 error instanceof LughxBotError
-                    ? error.userMessage || 'An error occurred while processing your selection.'
-                    : 'An unexpected error occurred while updating the configuration.';
+                    ? error.userMessage || 'Đã xảy ra lỗi khi xử lý lựa chọn của bạn.'
+                    : 'Đã xảy ra lỗi không xác định khi cập nhật cấu hình.';
 
             if (!selectInteraction.replied && !selectInteraction.deferred) {
                 await safeDeferInteraction(selectInteraction);
@@ -420,7 +420,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
             await selectInteraction
                 .followUp({
-                    embeds: [errorEmbed('Configuration Error', errorMessage)],
+                    embeds: [errorEmbed('Lỗi Cấu Hình', errorMessage)],
                     flags: MessageFlags.Ephemeral,
                 })
                 .catch(() => {});
@@ -430,8 +430,8 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             const timeoutEmbed = new EmbedBuilder()
-                .setTitle('\u23f0 Dashboard Timed Out')
-                .setDescription('This dashboard has been closed due to inactivity. Please run the command again to continue.')
+                .setTitle('\u23f0 Bảng Điều Khiển Hết Giờ')
+                .setDescription('Bảng điều khiển này đã đóng do không hoạt động. Vui lòng chạy lại lệnh để tiếp tục.')
                 .setColor(getColor('error'));
                 
             await InteractionHelper.safeEditReply(interaction, {
@@ -469,11 +469,11 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
-                        wasEnabled ? '🔴 Applications Disabled' : '🟢 Applications Enabled',
-                        `The applications system is now **${wasEnabled ? 'disabled' : 'enabled'}**.\n\n${
+                        wasEnabled ? '🔴 Đã Tắt Hệ Thống Ứng Tuyển' : '🟢 Đã Bật Hệ Thống Ứng Tuyển',
+                        `Hệ thống ứng tuyển hiện đã được **${wasEnabled ? 'tắt' : 'bật'}**.\n\n${
                             wasEnabled 
-                                ? 'Members will no longer be able to apply for roles.' 
-                                : 'Members can now start applying for roles.'
+                                ? 'Thành viên sẽ không thể nộp đơn xin cấp role nữa.' 
+                                : 'Thành viên hiện có thể bắt đầu nộp đơn xin role.'
                         }`,
                     )],
                     flags: MessageFlags.Ephemeral,
@@ -482,7 +482,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
             } catch (error) {
                 logger.error('Error toggling global application status:', error);
                 await toggleInteraction.followUp({
-                    embeds: [errorEmbed('Error', 'An error occurred while toggling the application status.')],
+                    embeds: [errorEmbed('Lỗi', 'Đã xảy ra lỗi khi cố gắng bật/tắt trạng thái ứng tuyển.')],
                     flags: MessageFlags.Ephemeral,
                 });
             }
@@ -491,8 +491,8 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
         globalToggleCollector.on('end', async (collected, reason) => {
             if (reason === 'time') {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setTitle('⏱️ Configuration Timeout')
-                    .setDescription('This dashboard session has timed out due to inactivity (10 minutes).\n\nTo continue configuring your applications, please run the command again.')
+                    .setTitle('⏱️ Hết Giờ Cấu Hình')
+                    .setDescription('Phiên cấu hình này đã hết giờ do không hoạt động (10 phút).\n\nĐể tiếp tục cấu hình, vui lòng chạy lại lệnh.')
                     .setColor(getColor('warning'));
                     
                 await InteractionHelper.safeEditReply(interaction, {
@@ -516,21 +516,21 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
         btnCollector.on('collect', async btnInteraction => {
             // Show confirmation modal
             const appRoleForDelete = roles.find(r => r.roleId === selectedRoleId);
-            const appNameForDelete = appRoleForDelete?.name ?? 'this application';
+            const appNameForDelete = appRoleForDelete?.name ?? 'form ứng tuyển này';
 
             const confirmModal = new ModalBuilder()
                 .setCustomId('app_delete_confirm')
-                .setTitle('Confirm Application Deletion');
+                .setTitle('Xác Nhận Xoá Form Ứng Tuyển');
 
             const deleteWarningText = new TextDisplayBuilder()
-                .setContent(`⚠️ You are about to permanently delete **${appNameForDelete}**. All stored applications and settings for this role will be removed and cannot be recovered.`);
+                .setContent(`⚠️ Bạn sắp xoá vĩnh viễn **${appNameForDelete}**. Tất cả các đơn đã lưu và cài đặt cho role này sẽ bị xoá và không thể khôi phục.`);
 
             const deleteCheckbox = new CheckboxBuilder()
                 .setCustomId('confirm_delete')
                 .setDefault(false);
 
             const deleteCheckboxLabel = new LabelBuilder()
-                .setLabel('I confirm — this cannot be undone')
+                .setLabel('Tôi xác nhận — hành động này không thể hoàn tác')
                 .setCheckboxComponent(deleteCheckbox);
 
             confirmModal
@@ -542,7 +542,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
             } catch (error) {
                 logger.error('Error showing delete confirmation modal:', error);
                 await btnInteraction.followUp({
-                    embeds: [errorEmbed('Error', 'Failed to show confirmation modal. Please try again.')],
+                    embeds: [errorEmbed('Lỗi', 'Không thể hiển thị bảng xác nhận. Vui lòng thử lại.')],
                     flags: MessageFlags.Ephemeral,
                 }).catch(() => {});
                 return;
@@ -557,7 +557,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
                 if (!confirmSubmit) {
                     await btnInteraction.followUp({
-                        embeds: [errorEmbed('Cancelled', 'Application deletion was cancelled.')],
+                        embeds: [errorEmbed('Đã Huỷ', 'Thao tác xoá form ứng tuyển đã bị huỷ.')],
                         flags: MessageFlags.Ephemeral,
                     });
                     return;
@@ -566,7 +566,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
                 const confirmed = confirmSubmit.fields.getCheckbox('confirm_delete');
                 if (!confirmed) {
                     await confirmSubmit.reply({
-                        embeds: [errorEmbed('Not Confirmed', 'You must tick the confirmation checkbox to delete the application.')],
+                        embeds: [errorEmbed('Chưa Xác Nhận', 'Bạn phải đánh dấu vào ô xác nhận để xoá form ứng tuyển.')],
                         flags: MessageFlags.Ephemeral,
                     });
                     return;
@@ -580,7 +580,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
             } catch (error) {
                 logger.error('Error confirming application deletion:', error);
                 await btnInteraction.followUp({
-                    embeds: [errorEmbed('Error', 'An error occurred while deleting the application.')],
+                    embeds: [errorEmbed('Lỗi', 'Đã xảy ra lỗi khi đang xoá form ứng tuyển.')],
                     flags: MessageFlags.Ephemeral,
                 });
             }
@@ -589,8 +589,8 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
         btnCollector.on('end', async (collected, reason) => {
             if (reason === 'time') {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setTitle('⏱️ Configuration Timeout')
-                    .setDescription('This dashboard session has timed out due to inactivity (10 minutes).\n\nTo continue configuring your applications, please run the command again.')
+                    .setTitle('⏱️ Hết Giờ Cấu Hình')
+                    .setDescription('Phiên cấu hình này đã hết giờ do không hoạt động (10 phút).\n\nĐể tiếp tục cấu hình, vui lòng chạy lại lệnh.')
                     .setColor(getColor('warning'));
                     
                 await InteractionHelper.safeEditReply(interaction, {
@@ -618,7 +618,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
                 const roleIndex = roles.findIndex(r => r.roleId === selectedRoleId);
                 if (roleIndex === -1) {
                     await toggleInteraction.followUp({
-                        embeds: [errorEmbed('Not Found', 'Application role not found.')],
+                        embeds: [errorEmbed('Không Tìm Thấy', 'Không tìm thấy role ứng tuyển.')],
                         flags: MessageFlags.Ephemeral,
                     });
                     return;
@@ -637,11 +637,11 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 
                 await toggleInteraction.followUp({
                     embeds: [successEmbed(
-                        wasEnabled ? '🔴 Application Disabled' : '🟢 Application Enabled',
-                        `The **${updatedRole.name}** application is now **${wasEnabled ? 'disabled' : 'enabled'}**.\n\n${
+                        wasEnabled ? '🔴 Đã Tắt Form Ứng Tuyển' : '🟢 Đã Bật Form Ứng Tuyển',
+                        `Form ứng tuyển **${updatedRole.name}** hiện đã được **${wasEnabled ? 'tắt' : 'bật'}**.\n\n${
                             wasEnabled 
-                                ? 'This application will no longer appear in `/apply submit` options.' 
-                                : 'This application will now appear in `/apply submit` options.'
+                                ? 'Form này sẽ không còn xuất hiện trong tuỳ chọn của lệnh `/apply submit` nữa.' 
+                                : 'Form này giờ sẽ xuất hiện trong tuỳ chọn của lệnh `/apply submit`.'
                         }`,
                     )],
                     flags: MessageFlags.Ephemeral,
@@ -650,7 +650,7 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
             } catch (error) {
                 logger.error('Error toggling application status:', error);
                 await toggleInteraction.followUp({
-                    embeds: [errorEmbed('Error', 'An error occurred while toggling the application status.')],
+                    embeds: [errorEmbed('Lỗi', 'Đã xảy ra lỗi khi bật/tắt trạng thái của form ứng tuyển.')],
                     flags: MessageFlags.Ephemeral,
                 });
             }
@@ -659,8 +659,8 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
         toggleCollector.on('end', async (collected, reason) => {
             if (reason === 'time') {
                 const timeoutEmbed = new EmbedBuilder()
-                    .setTitle('⏱️ Configuration Timeout')
-                    .setDescription('This dashboard session has timed out due to inactivity (10 minutes).\n\nTo continue configuring your applications, please run the command again.')
+                    .setTitle('⏱️ Hết Giờ Cấu Hình')
+                    .setDescription('Phiên cấu hình này đã hết giờ do không hoạt động (10 phút).\n\nĐể tiếp tục cấu hình, vui lòng chạy lại lệnh.')
                     .setColor(getColor('warning'));
                     
                 await InteractionHelper.safeEditReply(interaction, {
@@ -677,26 +677,26 @@ function setupCollectors(interaction, settings, roles, guildId, client, selected
 function buildApplicationSelectMenu(guildId, roleId) {
     return new StringSelectMenuBuilder()
         .setCustomId(`app_cfg_${roleId}`)
-        .setPlaceholder('Select a setting to configure...')
+        .setPlaceholder('Chọn một cài đặt để cấu hình...')
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Log Channel')
-                .setDescription('Set the channel where applications are logged')
+                .setLabel('Kênh Log')
+                .setDescription('Đặt kênh nhận thông báo đơn ứng tuyển mới')
                 .setValue('log_channel')
                 .setEmoji('📢'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Manager Roles')
-                .setDescription('Add or remove a role that can manage applications')
+                .setLabel('Role Quản Lý')
+                .setDescription('Thêm hoặc xoá role có quyền quản lý đơn')
                 .setValue('manager_role')
                 .setEmoji('🛡️'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Edit Questions')
-                .setDescription('Customise the questions shown on the application form')
+                .setLabel('Chỉnh Sửa Câu Hỏi')
+                .setDescription('Tuỳ chỉnh các câu hỏi hiển thị trong form ứng tuyển')
                 .setValue('questions')
                 .setEmoji('📝'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Retention Period')
-                .setDescription('Set how long pending and reviewed applications are kept')
+                .setLabel('Thời Gian Lưu Trữ')
+                .setDescription('Thiết lập thời gian lưu giữ lại các đơn ứng tuyển')
                 .setValue('retention')
                 .setEmoji('🗑️'),
         );
@@ -713,19 +713,19 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
 
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_log_channel_modal_${guildId}_${selectedRoleId || 'global'}`)
-        .setTitle('📢 Configure Log Channel');
+        .setTitle('📢 Cấu Hình Kênh Log');
 
     const channelSelect = new ChannelSelectMenuBuilder()
         .setCustomId('log_channel')
-        .setPlaceholder('Select a text channel...')
+        .setPlaceholder('Chọn một kênh văn bản...')
         .setMinValues(1)
         .setMaxValues(1)
         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         .setRequired(true);
 
     const channelLabel = new LabelBuilder()
-        .setLabel('Log Channel')
-        .setDescription('Channel where new applications will be logged')
+        .setLabel('Kênh Nhật Ký (Log)')
+        .setDescription('Kênh để gửi thông báo khi có đơn ứng tuyển mới')
         .setChannelSelectMenuComponent(channelSelect);
 
     modal.addLabelComponents(channelLabel);
@@ -751,7 +751,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
         }
 
         await modalSubmission.reply({
-            embeds: [successEmbed('✅ Log Channel Updated', `Application logs will now be sent to ${channel ?? `<#${channelId}>`}.`)],
+            embeds: [successEmbed('✅ Đã Cập Nhật Kênh Log', `Nhật ký ứng tuyển giờ sẽ được gửi vào kênh ${channel ?? `<#${channelId}>`}.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -760,7 +760,7 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
         if (error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in log channel modal:', error);
         await selectInteraction.followUp({
-            embeds: [errorEmbed('An error occurred while updating the log channel.')],
+            embeds: [errorEmbed('Đã xảy ra lỗi khi đang cập nhật kênh log.')],
             flags: MessageFlags.Ephemeral,
         });
     }
@@ -771,18 +771,18 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
 async function handleManagerRole(selectInteraction, rootInteraction, settings, roles, guildId, client) {
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_manager_role_modal_${guildId}`)
-        .setTitle('🛡️ Configure Manager Roles');
+        .setTitle('🛡️ Cấu Hình Role Quản Lý');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('manager_roles')
-        .setPlaceholder('Select roles to grant manager access...')
+        .setPlaceholder('Chọn các role để cấp quyền quản lý...')
         .setMinValues(1)
         .setMaxValues(5)
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Manager Roles')
-        .setDescription('Selected roles will be toggled on/off as manager roles')
+        .setLabel('Role Quản Lý')
+        .setDescription('Các role được chọn sẽ được bật/tắt quyền quản lý')
         .setRoleSelectMenuComponent(roleSelect);
 
     modal.addLabelComponents(roleLabel);
@@ -811,10 +811,10 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
 
         const finalList = settings.managerRoles.length > 0
             ? settings.managerRoles.map(id => `<@&${id}>`).join(', ')
-            : '`None`';
+            : '`Không có`';
 
         await modalSubmission.reply({
-            embeds: [successEmbed('✅ Manager Roles Updated', `Current manager roles: ${finalList}`)],
+            embeds: [successEmbed('✅ Đã Cập Nhật Role Quản Lý', `Role quản lý hiện tại: ${finalList}`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -823,7 +823,7 @@ async function handleManagerRole(selectInteraction, rootInteraction, settings, r
         if (error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in manager role modal:', error);
         await selectInteraction.followUp({
-            embeds: [errorEmbed('An error occurred while updating manager roles.')],
+            embeds: [errorEmbed('Đã xảy ra lỗi khi cập nhật role quản lý.')],
             flags: MessageFlags.Ephemeral,
         });
     }
@@ -841,12 +841,12 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
 
     const modal = new ModalBuilder()
         .setCustomId('app_cfg_questions')
-        .setTitle('Edit Application Questions')
+        .setTitle('Chỉnh Sửa Câu Hỏi Ứng Tuyển')
         .addComponents(
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('q1')
-                    .setLabel('Question 1 (required)')
+                    .setLabel('Câu hỏi 1 (Bắt buộc)')
                     .setStyle(TextInputStyle.Short)
                     .setValue(currentQuestions[0] ?? '')
                     .setMaxLength(100)
@@ -856,7 +856,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('q2')
-                    .setLabel('Question 2 (optional)')
+                    .setLabel('Câu hỏi 2 (Không bắt buộc)')
                     .setStyle(TextInputStyle.Short)
                     .setValue(currentQuestions[1] ?? '')
                     .setMaxLength(100)
@@ -865,7 +865,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('q3')
-                    .setLabel('Question 3 (optional)')
+                    .setLabel('Câu hỏi 3 (Không bắt buộc)')
                     .setStyle(TextInputStyle.Short)
                     .setValue(currentQuestions[2] ?? '')
                     .setMaxLength(100)
@@ -874,7 +874,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('q4')
-                    .setLabel('Question 4 (optional)')
+                    .setLabel('Câu hỏi 4 (Không bắt buộc)')
                     .setStyle(TextInputStyle.Short)
                     .setValue(currentQuestions[3] ?? '')
                     .setMaxLength(100)
@@ -883,7 +883,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('q5')
-                    .setLabel('Question 5 (optional)')
+                    .setLabel('Câu hỏi 5 (Không bắt buộc)')
                     .setStyle(TextInputStyle.Short)
                     .setValue(currentQuestions[4] ?? '')
                     .setMaxLength(100)
@@ -909,7 +909,7 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
 
     if (newQuestions.length === 0) {
         await submitted.reply({
-            embeds: [errorEmbed('No Questions', 'At least one question is required.')],
+            embeds: [errorEmbed('Không Có Câu Hỏi', 'Bắt buộc phải có ít nhất một câu hỏi.')],
             flags: MessageFlags.Ephemeral,
         });
         return;
@@ -929,8 +929,8 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
     await submitted.reply({
         embeds: [
             successEmbed(
-                '✅ Questions Updated',
-                `${newQuestions.length} question${newQuestions.length !== 1 ? 's' : ''} saved.`,
+                '✅ Đã Cập Nhật Câu Hỏi',
+                `Đã lưu ${newQuestions.length} câu hỏi.`,
             ),
         ],
         flags: MessageFlags.Ephemeral,
@@ -944,23 +944,23 @@ async function handleQuestions(selectInteraction, rootInteraction, settings, rol
 async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles, guildId, client) {
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_role_add_modal_${guildId}`)
-        .setTitle('➕ Add Application Role');
+        .setTitle('➕ Thêm Role Ứng Tuyển');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('application_role')
-        .setPlaceholder('Select the role members can apply for...')
+        .setPlaceholder('Chọn role mà thành viên có thể nộp đơn xin cấp...')
         .setMinValues(1)
         .setMaxValues(1)
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Application Role')
-        .setDescription('Select the Discord role members will be applying for')
+        .setLabel('Role Ứng Tuyển')
+        .setDescription('Chọn role Discord mà thành viên sẽ nộp đơn xin cấp')
         .setRoleSelectMenuComponent(roleSelect);
 
     const nameInput = new TextInputBuilder()
         .setCustomId('role_name')
-        .setLabel('Display name (leave blank to use role name)')
+        .setLabel('Tên hiển thị (để trống nếu dùng tên gốc của role)')
         .setStyle(TextInputStyle.Short)
         .setMaxLength(50)
         .setRequired(false);
@@ -982,7 +982,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
 
         if (roles.some(r => r.roleId === roleId)) {
             await modalSubmission.reply({
-                embeds: [errorEmbed('Already Added', `${role ?? roleId} is already an application role.`)],
+                embeds: [errorEmbed('Đã Tồn Tại', `${role ?? roleId} đã là một role ứng tuyển rồi.`)],
                 flags: MessageFlags.Ephemeral,
             });
             return;
@@ -992,7 +992,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
         await saveApplicationRoles(client, guildId, roles);
 
         await modalSubmission.reply({
-            embeds: [successEmbed('✅ Role Added', `${role ?? roleId} added as **${customName}**.`)],
+            embeds: [successEmbed('✅ Đã Thêm Role', `Đã thêm ${role ?? roleId} với tên hiển thị là **${customName}**`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -1001,7 +1001,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
         if (error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in role add modal:', error);
         await selectInteraction.followUp({
-            embeds: [errorEmbed('An error occurred while adding the application role.')],
+            embeds: [errorEmbed('Đã xảy ra lỗi khi thêm role ứng tuyển.')],
             flags: MessageFlags.Ephemeral,
         });
     }
@@ -1012,7 +1012,7 @@ async function handleRoleAdd(selectInteraction, rootInteraction, settings, roles
 async function handleRoleRemove(selectInteraction, rootInteraction, settings, roles, guildId, client) {
     if (roles.length === 0) {
         await selectInteraction.followUp({
-            embeds: [errorEmbed('No Roles', 'There are no application roles configured to remove.')],
+            embeds: [errorEmbed('Không Có Role', 'Không có role ứng tuyển nào được cấu hình để xoá.')],
             flags: MessageFlags.Ephemeral,
         });
         return;
@@ -1020,18 +1020,18 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
 
     const modal = new ModalBuilder()
         .setCustomId(`app_cfg_role_remove_modal_${guildId}`)
-        .setTitle('➖ Remove Application Role');
+        .setTitle('➖ Xoá Role Ứng Tuyển');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('remove_role')
-        .setPlaceholder('Select the role to remove...')
+        .setPlaceholder('Chọn role muốn xoá...')
         .setMinValues(1)
         .setMaxValues(1)
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Remove Application Role')
-        .setDescription('Select the role to remove from the applications list')
+        .setLabel('Xoá Role Ứng Tuyển')
+        .setDescription('Chọn role muốn xoá khỏi danh sách ứng tuyển')
         .setRoleSelectMenuComponent(roleSelect);
 
     modal.addLabelComponents(roleLabel);
@@ -1049,7 +1049,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
 
         if (index === -1) {
             await modalSubmission.reply({
-                embeds: [errorEmbed('Not Found', `<@&${roleId}> is not in the application roles list.`)],
+                embeds: [errorEmbed('Không Tìm Thấy', `<@&${roleId}> không có trong danh sách role ứng tuyển.`)],
                 flags: MessageFlags.Ephemeral,
             });
             return;
@@ -1059,7 +1059,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
         await saveApplicationRoles(client, guildId, roles);
 
         await modalSubmission.reply({
-            embeds: [successEmbed('✅ Role Removed', `<@&${roleId}> has been removed from the application roles.`)],
+            embeds: [successEmbed('✅ Đã Xoá Role', `<@&${roleId}> đã được xoá khỏi danh sách role ứng tuyển.`)],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -1068,7 +1068,7 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
         if (error.code === 'INTERACTION_TIMEOUT') return;
         logger.error('Error in role remove modal:', error);
         await selectInteraction.followUp({
-            embeds: [errorEmbed('An error occurred while removing the application role.')],
+            embeds: [errorEmbed('Đã xảy ra lỗi khi xoá role ứng tuyển.')],
             flags: MessageFlags.Ephemeral,
         });
     }
@@ -1079,17 +1079,17 @@ async function handleRoleRemove(selectInteraction, rootInteraction, settings, ro
 async function handleRetention(selectInteraction, rootInteraction, settings, roles, guildId, client) {
     const modal = new ModalBuilder()
         .setCustomId('app_cfg_retention')
-        .setTitle('Application Retention Periods');
+        .setTitle('Thời Gian Lưu Trữ Đơn');
 
     const retentionInfo = new TextDisplayBuilder()
         .setContent(
-            '**Pending** — how long unanswered/in-progress applications are kept before being automatically removed.\n' +
-            '**Reviewed** — how long approved or denied applications are kept.\n' +
-            '-# Enter a whole number between 1 and 3650 (max 10 years).',
+            '**Chờ duyệt** — thời gian giữ lại các đơn chưa trả lời/đang xử lý trước khi xoá tự động.\n' +
+            '**Đã duyệt** — thời gian giữ lại các đơn đã được chấp nhận hoặc từ chối.\n' +
+            '-# Nhập số nguyên từ 1 đến 3650 (tối đa 10 năm).',
         );
 
     const pendingLabel = new LabelBuilder()
-        .setLabel('Pending retention (days)')
+        .setLabel('Thời gian lưu đơn chờ (ngày)')
         .setTextInputComponent(
             new TextInputBuilder()
                 .setCustomId('pending_days')
@@ -1101,7 +1101,7 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
         );
 
     const reviewedLabel = new LabelBuilder()
-        .setLabel('Reviewed retention (days)')
+        .setLabel('Thời gian lưu đơn đã duyệt (ngày)')
         .setTextInputComponent(
             new TextInputBuilder()
                 .setCustomId('reviewed_days')
@@ -1133,7 +1133,7 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
 
     if (isNaN(pendingDays) || pendingDays < 1 || pendingDays > 3650) {
         await submitted.reply({
-            embeds: [errorEmbed('Invalid Value', 'Pending retention must be a whole number between **1** and **3650** days.')],
+            embeds: [errorEmbed('Giá Trị Không Hợp Lệ', 'Thời gian lưu đơn chờ phải là số nguyên từ **1** đến **3650** ngày.')],
             flags: MessageFlags.Ephemeral,
         });
         return;
@@ -1141,7 +1141,7 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
 
     if (isNaN(reviewedDays) || reviewedDays < 1 || reviewedDays > 3650) {
         await submitted.reply({
-            embeds: [errorEmbed('Invalid Value', 'Reviewed retention must be a whole number between **1** and **3650** days.')],
+            embeds: [errorEmbed('Giá Trị Không Hợp Lệ', 'Thời gian lưu đơn đã duyệt phải là số nguyên từ **1** đến **3650** ngày.')],
             flags: MessageFlags.Ephemeral,
         });
         return;
@@ -1154,8 +1154,8 @@ async function handleRetention(selectInteraction, rootInteraction, settings, rol
     await submitted.reply({
         embeds: [
             successEmbed(
-                '✅ Retention Updated',
-                `Pending applications will be kept for **${pendingDays} days**.\nReviewed applications will be kept for **${reviewedDays} days**.`,
+                '✅ Đã Cập Nhật Thời Gian Lưu Trữ',
+                `Đơn chờ duyệt sẽ được giữ lại trong **${pendingDays} ngày**.\nĐơn đã duyệt sẽ được giữ lại trong **${reviewedDays} ngày**.`,
             ),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1172,7 +1172,7 @@ async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, r
         const roleIndex = roles.findIndex(r => r.roleId === selectedRoleId);
         if (roleIndex === -1) {
             await confirmSubmit.reply({
-                embeds: [errorEmbed('Not Found', 'Application role not found.')],
+                embeds: [errorEmbed('Không Tìm Thấy', 'Không tìm thấy role ứng tuyển.')],
                 flags: MessageFlags.Ephemeral,
             });
             return;
@@ -1202,9 +1202,9 @@ async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, r
         await confirmSubmit.reply({
             embeds: [
                 successEmbed(
-                    '🗑️ Application Deleted',
-                    `The application for <@&${selectedRoleId}> (**${deletedRole.name}**) has been permanently deleted.\n\n` +
-                    `Deleted: **${applicationsToDelete.length}** application${applicationsToDelete.length !== 1 ? 's' : ''}`,
+                    '🗑️ Đã Xoá Form Ứng Tuyển',
+                    `Form ứng tuyển cho <@&${selectedRoleId}> (**${deletedRole.name}**) đã bị xoá vĩnh viễn.\n\n` +
+                    `Đã xoá: **${applicationsToDelete.length}** đơn ứng tuyển đã nộp`,
                 ),
             ],
             flags: MessageFlags.Ephemeral,
@@ -1213,7 +1213,7 @@ async function handleDeleteApplication(confirmSubmit, selectedRoleId, guildId, r
     } catch (error) {
         logger.error('Error in handleDeleteApplication:', error);
         await confirmSubmit.reply({
-            embeds: [errorEmbed('Error', 'An error occurred while deleting the application. Please try again.')],
+            embeds: [errorEmbed('Lỗi', 'Đã xảy ra lỗi khi xoá form ứng tuyển. Vui lòng thử lại.')],
             flags: MessageFlags.Ephemeral,
         });
     }
