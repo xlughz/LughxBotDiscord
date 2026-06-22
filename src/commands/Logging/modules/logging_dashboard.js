@@ -15,15 +15,15 @@ const EVENT_TYPES_BY_CATEGORY = Object.values(EVENT_TYPES).reduce((acc, eventTyp
 }, {});
 
 const CATEGORY_MAP = [
-    ['moderation',   '🔨 Moderation'],
-    ['ticket',       '🎫 Ticket Events'],
-    ['message',      '✉️ Message Events'],
-    ['role',         '🏷️ Role Events'],
-    ['member',       '👥 Member Events'],
-    ['leveling',     '📈 Leveling Events'],
-    ['reactionrole', '🎭 Reaction Role Events'],
-    ['giveaway',     '🎁 Giveaway Events'],
-    ['counter',      '📊 Counter Events'],
+    ['moderation',   '🔨 Sự kiện Quản trị'],
+    ['ticket',       '🎫 Sự kiện Ticket'],
+    ['message',      '✉️ Sự kiện Tin nhắn'],
+    ['role',         '🏷️ Sự kiện Vai trò'],
+    ['member',       '👥 Sự kiện Thành viên'],
+    ['leveling',     '📈 Sự kiện Cấp độ'],
+    ['reactionrole', '🎭 Sự kiện Reaction Role'],
+    ['giveaway',     '🎁 Sự kiện Giveaway'],
+    ['counter',      '📊 Sự kiện Bộ đếm'],
 ];
 
 function getCategoryStatus(enabledEvents, category, auditEnabled) {
@@ -36,9 +36,9 @@ function getCategoryStatus(enabledEvents, category, auditEnabled) {
 }
 
 async function formatChannelMention(guild, id) {
-    if (!id) return '`Not configured`';
+    if (!id) return '`Chưa cấu hình`';
     const channel = guild.channels.cache.get(id) ?? await guild.channels.fetch(id).catch(() => null);
-    return channel ? channel.toString() : `⚠️ Missing (${id})`;
+    return channel ? channel.toString() : `⚠️ Thiếu (${id})`;
 }
 
 export async function buildLoggingDashboardView(interaction, client) {
@@ -62,13 +62,13 @@ export async function buildLoggingDashboardView(interaction, client) {
     }).join('\n');
 
     const embed = new EmbedBuilder()
-        .setTitle('📋 Logging Dashboard')
-        .setDescription(`Manage audit logging for **${interaction.guild.name}**. Category buttons toggle logging instantly.`)
+        .setTitle('📋 Bảng điều khiển Nhật ký (Logging)')
+        .setDescription(`Quản lý nhật ký kiểm duyệt cho **${interaction.guild.name}**. Các nút danh mục giúp bật/tắt nhật ký ngay lập tức.`)
         .setColor(auditEnabled ? getColor('success') : getColor('warning'))
         .addFields(
             {
-                name: '🧾 Audit Logging',
-                value: auditEnabled ? '✅ Enabled' : '❌ Disabled',
+                name: '🧾 Trạng thái Logging',
+                value: auditEnabled ? '✅ Đã bật' : '❌ Đã tắt',
                 inline: true,
             },
             {
@@ -82,31 +82,31 @@ export async function buildLoggingDashboardView(interaction, client) {
                 inline: true,
             },
             {
-                name: '📡 Log Channels',
+                name: '📡 Các kênh Nhật ký',
                 value: [
-                    `**Audit:** ${auditChannel}`,
-                    `**Ticket Logs:** ${lifecycleChannel}`,
-                    `**Ticket Transcripts:** ${transcriptChannel}`,
+                    `**Kiểm duyệt:** ${auditChannel}`,
+                    `**Nhật ký Ticket:** ${lifecycleChannel}`,
+                    `**Bản ghi Ticket:** ${transcriptChannel}`,
                 ].join('\n'),
                 inline: false,
             },
             {
-                name: '📋 Event Categories',
+                name: '📋 Danh mục sự kiện',
                 value: categoryLines,
                 inline: false,
             },
             {
-                name: '🧹 Ignore Filters',
-                value: `Users: **${ignoredUsers.length}**\nChannels: **${ignoredChannels.length}**`,
+                name: '🧹 Bộ lọc bỏ qua',
+                value: `Người dùng: **${ignoredUsers.length}**\nKênh: **${ignoredChannels.length}**`,
                 inline: true,
             },
             {
-                name: '🕒 Last Refresh',
+                name: '🕒 Cập nhật lần cuối',
                 value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
                 inline: true,
             },
         )
-        .setFooter({ text: 'Use /logging setchannel to configure the audit channel  •  /ticket setup or /ticket dashboard to configure ticket channels' })
+        .setFooter({ text: 'Dùng /logging setchannel để cấu hình kênh nhật ký • Dùng /ticket setup hoặc /ticket dashboard để cấu hình kênh ticket' })
         .setTimestamp();
 
     const components = createLoggingDashboardComponents(loggingStatus.enabledEvents, auditEnabled);
@@ -118,7 +118,7 @@ export default {
         try {
             if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
                 return InteractionHelper.safeReply(interaction, {
-                    embeds: [errorEmbed('Permission Denied', 'You need **Manage Server** permissions to view the logging dashboard.')],
+                    embeds: [errorEmbed('Từ chối quyền truy cập', 'Bạn cần quyền **Quản lý máy chủ** để xem bảng điều khiển nhật ký.')],
                 });
             }
 
@@ -128,7 +128,7 @@ export default {
         } catch (error) {
             logger.error('logging_dashboard error:', error);
             await InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('Dashboard Error', 'Failed to load the logging dashboard.')],
+                embeds: [errorEmbed('Lỗi bảng điều khiển', 'Không thể tải bảng điều khiển nhật ký.')],
             });
         }
     },

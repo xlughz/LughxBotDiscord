@@ -9,13 +9,13 @@ export default {
     async execute(interaction, config, client) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return InteractionHelper.safeReply(interaction, {
-                embeds: [errorEmbed('Permission Denied', 'You need **Administrator** permissions to change log channels.')],
+                embeds: [errorEmbed('Từ chối quyền truy cập', 'Bạn cần quyền **Quản trị viên** để thay đổi kênh nhật ký.')],
             });
         }
 
         if (!client.db) {
             return InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('Database Error', 'Database not initialized.')],
+                embeds: [errorEmbed('Lỗi cơ sở dữ liệu', 'Cơ sở dữ liệu chưa được khởi tạo.')],
             });
         }
 
@@ -36,7 +36,7 @@ export default {
                 };
                 await setGuildConfig(client, guildId, currentConfig);
                 return InteractionHelper.safeEditReply(interaction, {
-                    embeds: [successEmbed('Logging Disabled 🚫', 'Audit logging has been disabled for this server.')],
+                    embeds: [successEmbed('Đã tắt Nhật ký 🚫', 'Nhật ký kiểm duyệt đã bị tắt cho máy chủ này.')],
                 });
             }
 
@@ -44,7 +44,7 @@ export default {
                 const perms = logChannel.permissionsFor(interaction.guild.members.me);
                 if (!perms.has(PermissionsBitField.Flags.SendMessages) || !perms.has(PermissionsBitField.Flags.EmbedLinks)) {
                     return InteractionHelper.safeEditReply(interaction, {
-                        embeds: [errorEmbed('Bot Permission Error', `I need **Send Messages** and **Embed Links** permissions in ${logChannel}.`)],
+                        embeds: [errorEmbed('Lỗi quyền của Bot', `Tôi cần quyền **Gửi tin nhắn** và **Nhúng liên kết** trong kênh ${logChannel}.`)],
                     });
                 }
 
@@ -58,17 +58,17 @@ export default {
                 await setGuildConfig(client, guildId, currentConfig);
 
                 await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [successEmbed('Log Channel Set 📝', `Audit logs will be sent to ${logChannel}.`)],
+                    embeds: [successEmbed('Đã thiết lập Kênh nhật ký 📝', `Nhật ký kiểm duyệt sẽ được gửi tới ${logChannel}.`)],
                 });
 
                 await logEvent({
                     client,
                     guild: interaction.guild,
                     event: {
-                        action: 'Log Channel Activated',
+                        action: 'Kích hoạt kênh nhật ký',
                         target: logChannel.toString(),
                         executor: `${interaction.user.tag} (${interaction.user.id})`,
-                        reason: `Logging channel set by ${interaction.user}`,
+                        reason: `Kênh nhật ký được thiết lập bởi ${interaction.user}`,
                         metadata: { channelId: logChannel.id, moderatorId: interaction.user.id, loggingEnabled: true },
                     },
                 });
@@ -76,12 +76,12 @@ export default {
             }
 
             return InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('No Option Provided', 'Provide one of: `channel` or `disable: True`.\n\n> Ticket transcript and logs channels are managed via `/ticket setup` or `/ticket dashboard`.')],
+                embeds: [errorEmbed('Chưa cung cấp tùy chọn', 'Vui lòng cung cấp một trong hai: `channel` (kênh) hoặc `disable: True`.\n\n> Các kênh bản ghi và nhật ký Ticket được quản lý thông qua lệnh `/ticket setup` hoặc `/ticket dashboard`.')],
             });
         } catch (error) {
             logger.error('logging setchannel error:', error);
             await InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('Configuration Error', 'Could not save the configuration.')],
+                embeds: [errorEmbed('Lỗi cấu hình', 'Không thể lưu cấu hình.')],
             });
         }
     },

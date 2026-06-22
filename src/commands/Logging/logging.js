@@ -10,75 +10,75 @@ import filter from './modules/logging_filter.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('logging')
-        .setDescription('Manage audit logging for this server.')
+        .setDescription('Quản lý hệ thống nhật ký kiểm duyệt (logging) cho máy chủ.')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('dashboard')
-                .setDescription('Open the interactive logging dashboard — view status and toggle event categories.'),
+                .setDescription('Mở bảng điều khiển nhật ký tương tác — xem trạng thái và bật/tắt các danh mục sự kiện.'),
         )
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('setchannel')
-                .setDescription('Set the audit log channel for this server.')
+                .setDescription('Thiết lập kênh gửi nhật ký kiểm duyệt cho máy chủ.')
                 .addChannelOption((option) =>
                     option
                         .setName('channel')
-                        .setDescription('The text channel for audit logs.')
+                        .setDescription('Kênh văn bản dùng để gửi nhật ký.')
                         .addChannelTypes(ChannelType.GuildText)
                         .setRequired(false),
                 )
                 .addBooleanOption((option) =>
                     option
                         .setName('disable')
-                        .setDescription('Set to True to disable audit logging entirely.')
+                        .setDescription('Chọn True để tắt hoàn toàn nhật ký kiểm duyệt.')
                         .setRequired(false),
                 ),
         )
         .addSubcommandGroup((group) =>
             group
                 .setName('filter')
-                .setDescription('Manage the log ignore list (users and channels to skip).')
+                .setDescription('Quản lý danh sách bỏ qua (các người dùng và kênh không ghi nhật ký).')
                 .addSubcommand((subcommand) =>
                     subcommand
                         .setName('add')
-                        .setDescription('Add a user or channel to the log ignore list.')
+                        .setDescription('Thêm người dùng hoặc kênh vào danh sách bỏ qua.')
                         .addStringOption((option) =>
                             option
                                 .setName('type')
-                                .setDescription('Whether to ignore a user or channel.')
+                                .setDescription('Chọn loại đối tượng cần bỏ qua.')
                                 .setRequired(true)
                                 .addChoices(
-                                    { name: 'User', value: 'user' },
-                                    { name: 'Channel', value: 'channel' },
+                                    { name: 'Người dùng', value: 'user' },
+                                    { name: 'Kênh', value: 'channel' },
                                 ),
                         )
                         .addStringOption((option) =>
                             option
                                 .setName('id')
-                                .setDescription('The ID of the user or channel to ignore.')
+                                .setDescription('ID của người dùng hoặc kênh cần bỏ qua.')
                                 .setRequired(true),
                         ),
                 )
                 .addSubcommand((subcommand) =>
                     subcommand
                         .setName('remove')
-                        .setDescription('Remove a user or channel from the log ignore list.')
+                        .setDescription('Xóa người dùng hoặc kênh khỏi danh sách bỏ qua.')
                         .addStringOption((option) =>
                             option
                                 .setName('type')
-                                .setDescription('Whether this is a user or channel.')
+                                .setDescription('Loại đối tượng.')
                                 .setRequired(true)
                                 .addChoices(
-                                    { name: 'User', value: 'user' },
-                                    { name: 'Channel', value: 'channel' },
+                                    { name: 'Người dùng', value: 'user' },
+                                    { name: 'Kênh', value: 'channel' },
                                 ),
                         )
                         .addStringOption((option) =>
                             option
                                 .setName('id')
-                                .setDescription('The ID of the user or channel to remove from the ignore list.')
+                                .setDescription('ID của người dùng hoặc kênh cần xóa khỏi danh sách bỏ qua.')
                                 .setRequired(true),
                         ),
                 ),
@@ -86,7 +86,6 @@ export default {
 
     async execute(interaction, config, client) {
         try {
-            // setchannel and filter both need a reply deferred before their logic runs
             const subcommandGroup = interaction.options.getSubcommandGroup(false);
             const subcommand = interaction.options.getSubcommand();
 
@@ -105,12 +104,12 @@ export default {
             }
 
             await InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('Unknown Subcommand', 'This subcommand is not recognised.')],
+                embeds: [errorEmbed('Lệnh không xác định', 'Lệnh con này không được công nhận.')],
             });
         } catch (error) {
             logger.error('logging command error:', error);
             await InteractionHelper.safeReply(interaction, {
-                embeds: [errorEmbed('Error', 'An unexpected error occurred.')],
+                embeds: [errorEmbed('Lỗi', 'Đã xảy ra lỗi không mong muốn.')],
                 ephemeral: true,
             }).catch(() => {});
         }
