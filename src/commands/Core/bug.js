@@ -1,29 +1,29 @@
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("bug")
-        .setDescription("Report a bug or issue with the bot"),
+        .setDescription("Báo cáo lỗi hoặc sự cố của bot"),
 
     async execute(interaction) {
         const githubButton = new ButtonBuilder()
-            .setLabel('?? Report Bug on GitHub')
+            .setLabel('Báo cáo lỗi trên GitHub')
             .setStyle(ButtonStyle.Link)
-            .setURL('');
+            .setURL('https://github.com/xlughz'); // Hãy thay URL GitHub của bạn vào đây
 
         const row = new ActionRowBuilder().addComponents(githubButton);
 
         const bugReportEmbed = createEmbed({
-            title: '?? Bug Report',
-            description: 'Found a bug? Please report it on our GitHub Issues page!\n\n' +
-            '**When reporting a bug, please include:**\n' +
-            '• ?? Detailed description of the issue\n' +
-            '• ?? Steps to reproduce the problem\n' +
-            '• ?? Screenshots if applicable\n' +
-            '• ?? Your bot version and environment\n\n' +
-            'This helps us fix issues faster and more effectively!',
+            title: '🐛 Báo Cáo Lỗi (Bug Report)',
+            description: 'Bạn đã tìm thấy lỗi? Hãy báo cáo nó trên trang GitHub Issues của chúng tôi!\n\n' +
+            '**Khi báo cáo lỗi, vui lòng bao gồm:**\n' +
+            '• 📝 Mô tả chi tiết về sự cố\n' +
+            '• 👣 Các bước để tái hiện lỗi\n' +
+            '• 📸 Ảnh chụp màn hình (nếu có)\n' +
+            '• 🤖 Phiên bản bot và môi trường đang chạy\n\n' +
+            'Điều này giúp chúng tôi sửa lỗi nhanh hơn và hiệu quả hơn!',
             color: 'error'
         })
             .setTimestamp();
@@ -34,7 +34,3 @@ export default {
         });
     },
 };
-
-
-
-

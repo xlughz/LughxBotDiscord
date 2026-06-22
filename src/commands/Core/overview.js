@@ -10,25 +10,25 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 
 function pill(enabled) {
-    return enabled ? '✅ On' : '❌ Off';
+    return enabled ? '✅ Bật' : '❌ Tắt';
 }
 
 async function formatChannelMention(guild, id) {
-    if (!id) return '`Not configured`';
+    if (!id) return '`Chưa cấu hình`';
     const channel = guild.channels.cache.get(id) ?? await guild.channels.fetch(id).catch(() => null);
-    return channel ? channel.toString() : `⚠️ Missing (${id})`;
+    return channel ? channel.toString() : `⚠️ Thiếu (${id})`;
 }
 
 function formatRoleMention(guild, id) {
-    if (!id) return '`Not configured`';
+    if (!id) return '`Chưa cấu hình`';
     const role = guild.roles.cache.get(id);
-    return role ? role.toString() : `⚠️ Missing (${id})`;
+    return role ? role.toString() : `⚠️ Thiếu (${id})`;
 }
 
 export default {
     data: new SlashCommandBuilder()
         .setName('overview')
-        .setDescription('Read-only snapshot of all server system statuses.')
+        .setDescription('Xem trạng thái tổng quan của tất cả các hệ thống trong bot.')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false),
 
@@ -61,54 +61,54 @@ export default {
                 ]);
 
             const embed = new EmbedBuilder()
-                .setTitle('🖥️ System Overview')
-                .setDescription(`Read-only snapshot for **${interaction.guild.name}**. Use the relevant command's dashboard to make changes.`)
+                .setTitle('🖥️ Tổng Quan Hệ Thống')
+                .setDescription(`Trạng thái các hệ thống tại **${interaction.guild.name}**. Sử dụng bảng điều khiển của từng lệnh để thay đổi cài đặt.`)
                 .setColor(getColor('primary'))
                 .addFields(
                     // ── Core systems ──
                     {
-                        name: '⚙️ Core Systems',
+                        name: '⚙️ Các Hệ Thống Chính',
                         value: [
-                            `🧾 **Audit Logging** — ${pill(Boolean(loggingStatus.enabled))}`,
-                            `📈 **Leveling** — ${pill(Boolean(levelingConfig?.enabled))}`,
-                            `👋 **Welcome** — ${pill(Boolean(welcomeConfig?.enabled))}`,
-                            `👋 **Goodbye** — ${pill(Boolean(welcomeConfig?.goodbyeEnabled))}`,
-                            `🎂 **Birthdays** — ${pill(Boolean(guildConfig.birthdayChannelId))}`,
-                            `📋 **Applications** — ${pill(Boolean(applicationConfig?.enabled))}`,
-                            `✅ **Verification** — ${pill(verificationEnabled)}`,
-                            `🤖 **Auto-Verify** — ${pill(autoVerifyEnabled)}`,
-                            `🎧 **Join to Create** — ${pill(Boolean(joinToCreateConfig?.enabled))}`,
-                            `🛡️ **Auto Role** — ${autoRoleId ? `✅ ${formatRoleMention(interaction.guild, autoRoleId)}` : '❌ Off'}`,
+                            `🧾 **Nhật ký (Audit):** ${pill(Boolean(loggingStatus.enabled))}`,
+                            `📈 **Cấp độ (Leveling):** ${pill(Boolean(levelingConfig?.enabled))}`,
+                            `👋 **Chào mừng:** ${pill(Boolean(welcomeConfig?.enabled))}`,
+                            `👋 **Tạm biệt:** ${pill(Boolean(welcomeConfig?.goodbyeEnabled))}`,
+                            `🎂 **Sinh nhật:** ${pill(Boolean(guildConfig.birthdayChannelId))}`,
+                            `📋 **Ứng tuyển:** ${pill(Boolean(applicationConfig?.enabled))}`,
+                            `✅ **Xác minh:** ${pill(verificationEnabled)}`,
+                            `🤖 **Tự động xác minh:** ${pill(autoVerifyEnabled)}`,
+                            `🎧 **Phòng thoại động:** ${pill(Boolean(joinToCreateConfig?.enabled))}`,
+                            `🛡️ **Tự động cấp role:** ${autoRoleId ? `✅ ${formatRoleMention(interaction.guild, autoRoleId)}` : '❌ Tắt'}`,
                         ].join('\n'),
                         inline: false,
                     },
                     // ── Channels ──
                     {
-                        name: '📡 Configured Channels',
+                        name: '📡 Các Kênh Đã Cấu Hình',
                         value: [
-                            `**Audit Log:** ${auditChannel}`,
-                            `**Ticket Lifecycle:** ${lifecycleChannel}`,
-                            `**Ticket Transcripts:** ${transcriptChannel}`,
-                            `**Reports:** ${reportChannel}`,
-                            `**Birthdays:** ${birthdayChannel}`,
+                            `**Nhật ký hệ thống:** ${auditChannel}`,
+                            `**Ticket (vòng đời):** ${lifecycleChannel}`,
+                            `**Ticket (transcript):** ${transcriptChannel}`,
+                            `**Báo cáo lỗi:** ${reportChannel}`,
+                            `**Sinh nhật:** ${birthdayChannel}`,
                         ].join('\n'),
                         inline: false,
                     },
                     // ── Refresh stamp ──
                     {
-                        name: '🕒 Snapshot Taken',
+                        name: '🕒 Thời gian cập nhật',
                         value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
                         inline: true,
                     },
                 )
-                .setFooter({ text: 'Read-only — run /logging dashboard to manage audit settings' })
+                .setFooter({ text: 'Chỉ đọc — sử dụng các lệnh điều khiển tương ứng để thay đổi cài đặt' })
                 .setTimestamp();
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
         } catch (error) {
             logger.error('overview command error:', error);
             await InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed('Overview Error', 'Failed to load the system overview.')],
+                embeds: [errorEmbed('Lỗi Tổng Quan', 'Không thể tải trạng thái hệ thống.')],
             });
         }
     },

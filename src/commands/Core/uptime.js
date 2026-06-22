@@ -5,44 +5,40 @@ import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
-    .setName("uptime")
-    .setDescription("Check how long the bot has been online"),
+        .setName("uptime")
+        .setDescription("Kiểm tra thời gian bot đã hoạt động"),
 
-  async execute(interaction) {
-    try {
-      await InteractionHelper.safeDefer(interaction);
-      
-      let totalSeconds = interaction.client.uptime / 1000;
-      let days = Math.floor(totalSeconds / 86400);
-      totalSeconds %= 86400;
-      let hours = Math.floor(totalSeconds / 3600);
-      totalSeconds %= 3600;
-      let minutes = Math.floor(totalSeconds / 60);
-      let seconds = Math.floor(totalSeconds % 60);
+    async execute(interaction) {
+        try {
+            await InteractionHelper.safeDefer(interaction);
+            
+            let totalSeconds = interaction.client.uptime / 1000;
+            let days = Math.floor(totalSeconds / 86400);
+            totalSeconds %= 86400;
+            let hours = Math.floor(totalSeconds / 3600);
+            totalSeconds %= 3600;
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = Math.floor(totalSeconds % 60);
 
-      const uptimeStr = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            const uptimeStr = `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
 
-      await InteractionHelper.safeEditReply(interaction, {
-        embeds: [createEmbed({ 
-          title: "⏱️ System Uptime", 
-          description: `\`\`\`${uptimeStr}\`\`\`` 
-        })],
-      });
-    } catch (error) {
-      logger.error('Uptime command error:', error);
-      
-      try {
-        return await InteractionHelper.safeEditReply(interaction, {
-          embeds: [createEmbed({ title: 'System Error', description: 'Could not compute uptime.', color: 'error' })],
-          flags: MessageFlags.Ephemeral,
-        });
-      } catch (replyError) {
-        logger.error('Failed to send error reply:', replyError);
-      }
-    }
-  },
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [createEmbed({ 
+                    title: "⏱️ Thời Gian Hoạt Động Của Bot", 
+                    description: `\`\`\`${uptimeStr}\`\`\`` 
+                })],
+            });
+        } catch (error) {
+            logger.error('Uptime command error:', error);
+            
+            try {
+                return await InteractionHelper.safeEditReply(interaction, {
+                    embeds: [createEmbed({ title: 'Lỗi Hệ Thống', description: 'Không thể tính toán thời gian hoạt động.', color: 'error' })],
+                    flags: MessageFlags.Ephemeral,
+                });
+            } catch (replyError) {
+                logger.error('Failed to send error reply:', replyError);
+            }
+        }
+    },
 };
-
-
-
-

@@ -40,10 +40,6 @@ const CATEGORY_ICONS = {
     Config: "⚙️",
 };
 
-
-
-
-
 export async function createInitialHelpMenu(client) {
     const commandsPath = path.join(__dirname, "../../commands");
     const categoryDirs = (
@@ -55,8 +51,8 @@ export async function createInitialHelpMenu(client) {
 
     const options = [
         {
-            label: "📋 All Commands",
-            description: "View all available commands with pagination",
+            label: "📋 Tất cả lệnh",
+            description: "Xem danh sách toàn bộ lệnh của bot",
             value: ALL_COMMANDS_ID,
         },
         ...categoryDirs.map((category) => {
@@ -66,7 +62,7 @@ export async function createInitialHelpMenu(client) {
             const icon = CATEGORY_ICONS[categoryName] || "🔍";
             return {
                 label: `${icon} ${categoryName}`,
-                description: `View commands in the ${categoryName} category`,
+                description: `Xem các lệnh thuộc nhóm ${categoryName}`,
                 value: category,
             };
         }),
@@ -74,112 +70,50 @@ export async function createInitialHelpMenu(client) {
 
     const botName = client?.user?.username || "Bot";
     const embed = createEmbed({ 
-        title: `🤖 ${botName} Help Center`,
-        description: "Your all-in-one Discord companion for moderation, economy, fun, and server management.",
+        title: `🤖 Trung tâm trợ giúp ${botName}`,
+        description: "Người bạn đồng hành toàn diện cho máy chủ của bạn: từ quản lý, kinh tế, giải trí đến các công cụ quản trị server.",
         color: 'primary'
     });
 
     embed.addFields(
-        {
-            name: "🛡️ **Moderation**",
-            value: "Server moderation, user management, and enforcement tools",
-            inline: true
-        },
-        {
-            name: "💰 **Economy**",
-            value: "Currency system, shops, and virtual economy",
-            inline: true
-        },
-        {
-            name: "🎮 **Fun**",
-            value: "Games, entertainment, and interactive commands",
-            inline: true
-        },
-        {
-            name: "📊 **Leveling**",
-            value: "User levels, XP system, and progression tracking",
-            inline: true
-        },
-        {
-            name: "🎫 **Tickets**",
-            value: "Support ticket system for server management",
-            inline: true
-        },
-        {
-            name: "🎉 **Giveaways**",
-            value: "Automated giveaway management and distribution",
-            inline: true
-        },
-        {
-            name: "👋 **Welcome**",
-            value: "Member welcome messages and onboarding",
-            inline: true
-        },
-        {
-            name: "🎂 **Birthdays**",
-            value: "Birthday tracking and celebration features",
-            inline: true
-        },
-        {
-            name: "👥 **Community**",
-            value: "Community tools, applications, and member engagement",
-            inline: true
-        },
-        {
-            name: "⚙️ **Config**",
-            value: "Server and bot configuration management commands",
-            inline: true
-        },
-        {
-            name: "🔢 **Counter**",
-            value: "Live counter channel setup and counter controls",
-            inline: true
-        },
-        {
-            name: "🎙️ **Join to Create**",
-            value: "Dynamic voice channel creation and management",
-            inline: true
-        },
-        {
-            name: "🎭 **Reaction Roles**",
-            value: "Self-assignable roles using reaction-role systems",
-            inline: true
-        },
-        {
-            name: "✅ **Verification**",
-            value: "Member verification workflows and access gating",
-            inline: true
-        },
-        {
-            name: "🔧 **Utilities**",
-            value: "Useful tools and server utilities",
-            inline: true
-        }
+        { name: "🛡️ **Quản trị**", value: "Quản lý máy chủ, kiểm soát người dùng và các công cụ thực thi luật.", inline: true },
+        { name: "💰 **Kinh tế**", value: "Hệ thống tiền tệ, cửa hàng và các tính năng kinh tế ảo.", inline: true },
+        { name: "🎮 **Giải trí**", value: "Trò chơi, giải trí và các lệnh tương tác thú vị.", inline: true },
+        { name: "📊 **Cấp độ**", value: "Theo dõi cấp độ, hệ thống kinh nghiệm (XP) và tiến trình người dùng.", inline: true },
+        { name: "🎫 **Vé hỗ trợ**", value: "Hệ thống tạo phiếu hỗ trợ (ticket) cho máy chủ.", inline: true },
+        { name: "🎉 **Giveaway**", value: "Quản lý và tổ chức các chương trình quà tặng tự động.", inline: true },
+        { name: "👋 **Chào mừng**", value: "Tin nhắn chào mừng thành viên mới và hướng dẫn người dùng.", inline: true },
+        { name: "🎂 **Sinh nhật**", value: "Theo dõi ngày sinh nhật và tính năng ăn mừng.", inline: true },
+        { name: "👥 **Cộng đồng**", value: "Công cụ quản lý cộng đồng và tương tác thành viên.", inline: true },
+        { name: "⚙️ **Cấu hình**", value: "Quản lý thiết lập máy chủ và tùy chỉnh các chức năng bot.", inline: true },
+        { name: "🔢 **Bộ đếm**", value: "Thiết lập kênh đếm số và điều khiển bộ đếm.", inline: true },
+        { name: "🎙️ **Tạo phòng thoại**", value: "Tự động tạo và quản lý phòng thoại động.", inline: true },
+        { name: "🎭 **Role phản ứng**", value: "Tự nhận role thông qua hệ thống phản ứng (reaction-roles).", inline: true },
+        { name: "✅ **Xác minh**", value: "Quy trình xác minh thành viên và kiểm soát quyền truy cập.", inline: true },
+        { name: "🔧 **Công cụ**", value: "Các công cụ hữu ích và tiện ích máy chủ khác.", inline: true }
     );
 
-    embed.setFooter({ 
-        text: "Made with ❤️" 
-    });
+    embed.setFooter({ text: "Được tạo với Lughx ❤️" });
     embed.setTimestamp();
 
     const bugReportButton = new ButtonBuilder()
         .setCustomId(BUG_REPORT_BUTTON_ID)
-        .setLabel("Report Bug")
+        .setLabel("Báo cáo lỗi")
         .setStyle(ButtonStyle.Danger);
 
     const supportButton = new ButtonBuilder()
-        .setLabel("Support Server")
-        .setURL("https://discord.gg/QnWNz2dKCE")
+        .setLabel("Máy chủ hỗ trợ")
+        .setURL("https://discord.gg/uGTcXGcJEY")
         .setStyle(ButtonStyle.Link);
 
     const touchpointButton = new ButtonBuilder()
-        .setLabel("Learn from Touchpoint")
-        .setURL("https://www.youtube.com/@TouchDisc")
+        .setLabel("My Tiktok")
+        .setURL("https://www.tiktok.com/@zbim08")
         .setStyle(ButtonStyle.Link);
 
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
-        "Select to view the commands",
+        "Chọn để xem các lệnh",
         options,
     );
 
@@ -198,11 +132,9 @@ export async function createInitialHelpMenu(client) {
 export default {
     data: new SlashCommandBuilder()
         .setName("help")
-        .setDescription("Displays the help menu with all available commands"),
+        .setDescription("Hiển thị menu trợ giúp với tất cả các lệnh khả dụng"),
 
     async execute(interaction, guildConfig, client) {
-        
-        const { MessageFlags } = await import('discord.js');
         await InteractionHelper.safeDefer(interaction);
         
         const { embeds, components } = await createInitialHelpMenu(client);
@@ -215,8 +147,8 @@ export default {
         setTimeout(async () => {
             try {
                 const closedEmbed = createEmbed({
-                    title: "Help menu closed",
-                    description: "Help menu has been closed, use /help again.",
+                    title: "Menu trợ giúp đã đóng",
+                    description: "Menu trợ giúp đã hết hạn, vui lòng gõ /help để mở lại.",
                     color: "secondary",
                 });
 
@@ -225,10 +157,8 @@ export default {
                     components: [],
                 });
             } catch (error) {
-                
+                // Xử lý im lặng nếu tương tác đã bị xóa hoặc lỗi
             }
         }, HELP_MENU_TIMEOUT_MS);
     },
 };
-
-

@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("ping")
-        .setDescription("Checks the bot's latency and API speed"),
+        .setDescription("Kiểm tra độ trễ của bot và tốc độ API"),
 
     async execute(interaction) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
@@ -21,15 +21,15 @@ export default {
 
         try {
             await InteractionHelper.safeEditReply(interaction, {
-                content: "Pinging...",
+                content: "Đang kiểm tra...",
             });
 
             const latency = Date.now() - interaction.createdTimestamp;
             const apiLatency = Math.round(interaction.client.ws.ping);
 
             const embed = createEmbed({ title: "🏓 Pong!", description: null }).addFields(
-                { name: "Bot Latency", value: `${latency}ms`, inline: true },
-                { name: "API Latency", value: `${apiLatency}ms`, inline: true },
+                { name: "Độ trễ Bot", value: `${latency}ms`, inline: true },
+                { name: "Độ trễ API", value: `${apiLatency}ms`, inline: true },
             );
 
             await InteractionHelper.safeEditReply(interaction, {
@@ -40,7 +40,7 @@ export default {
             logger.error('Ping command error:', error);
             try {
                 return await InteractionHelper.safeReply(interaction, {
-                    embeds: [createEmbed({ title: 'System Error', description: 'Could not determine latency at this time.', color: 'error' })],
+                    embeds: [createEmbed({ title: 'Lỗi Hệ Thống', description: 'Không thể xác định độ trễ vào lúc này.', color: 'error' })],
                     flags: MessageFlags.Ephemeral,
                 });
             } catch (replyError) {
@@ -49,7 +49,3 @@ export default {
         }
     },
 };
-
-
-
-
