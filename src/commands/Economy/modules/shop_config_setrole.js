@@ -8,7 +8,7 @@ export default {
     async execute(interaction, config, client) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
             return InteractionHelper.safeReply(interaction, {
-                embeds: [errorEmbed('Permission Denied', 'You need **Manage Server** permissions to set the premium role.')],
+                embeds: [errorEmbed('Từ chối quyền truy cập', 'Bạn cần có quyền **Quản lý máy chủ** để thiết lập role cao cấp (premium).')],
                 ephemeral: true,
             });
         }
@@ -22,13 +22,13 @@ export default {
             await setGuildConfig(client, guildId, currentConfig);
 
             return InteractionHelper.safeReply(interaction, {
-                embeds: [successEmbed('✅ Premium Role Set', `The **Premium Shop Role** has been set to ${role.toString()}. Members who purchase the Premium Role item will be granted this role.`)],
+                embeds: [successEmbed('✅ Đã Thiết Lập Role Premium', `**Role Premium trong cửa hàng** đã được đặt thành ${role.toString()}. Những thành viên mua vật phẩm Role Premium sẽ được tự động cấp role này.`)],
                 ephemeral: true,
             });
         } catch (error) {
             logger.error('shop_config_setrole error:', error);
             return InteractionHelper.safeReply(interaction, {
-                embeds: [errorEmbed('System Error', 'Could not save the guild configuration.')],
+                embeds: [errorEmbed('Lỗi Hệ Thống', 'Không thể lưu cấu hình của máy chủ.')],
                 ephemeral: true,
             });
         }

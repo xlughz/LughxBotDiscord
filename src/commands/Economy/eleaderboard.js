@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { createEmbed } from '../../utils/embeds.js';
+import { createEmbed, errorEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
 import { withErrorHandling, createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -7,9 +7,8 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("eleaderboard")
-        .setDescription("View the server's top 10 richest users.")
+        .setDescription("Xem bảng xếp hạng 10 người giàu nhất máy chủ")
         .setDMPermission(false),
-    
     
     execute: withErrorHandling(async (interaction, config, client) => {
         const deferred = await InteractionHelper.safeDefer(interaction);
@@ -31,7 +30,7 @@ export default {
                 throw createError(
                     "No economy data found",
                     ErrorTypes.VALIDATION,
-                    "No economy data found for this server."
+                    "Hiện tại chưa có dữ liệu kinh tế nào cho máy chủ này."
                 );
             }
 
@@ -76,19 +75,14 @@ export default {
 
             const description = leaderboardEntries.length > 0
                 ? leaderboardEntries.join("\n")
-                : "No economy data is available for this server yet.";
+                : "Chưa có dữ liệu kinh tế nào cho máy chủ này.";
 
             const embed = createEmbed({
-                title: `Economy Leaderboard`,
-                description,
-                footer: `Your Rank: ${userRank > 0 ? `#${userRank}` : "No ranking data available"}`,
+                title: `📊 Bảng Xếp Hạng Kinh Tế`,
+                description: description,
+                footer: `Hạng của bạn: ${userRank > 0 ? `#${userRank}` : "Chưa có dữ liệu xếp hạng"}`,
             });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }, { command: 'eleaderboard' })
 };
-
-
-
-
-

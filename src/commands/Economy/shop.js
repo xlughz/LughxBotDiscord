@@ -9,24 +9,24 @@ import shopConfigSetrole from './modules/shop_config_setrole.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('shop')
-        .setDescription('Economy shop commands.')
+        .setDescription('Các lệnh liên quan đến cửa hàng kinh tế.')
         .addSubcommand(subcommand =>
             subcommand
                 .setName('browse')
-                .setDescription('Browse the economy shop.'),
+                .setDescription('Duyệt qua cửa hàng kinh tế.'),
         )
         .addSubcommandGroup(group =>
             group
                 .setName('config')
-                .setDescription('Configure shop settings. (Manage Server required)')
+                .setDescription('Cấu hình cài đặt cửa hàng. (Yêu cầu quyền Quản lý máy chủ)')
                 .addSubcommand(subcommand =>
                     subcommand
                         .setName('setrole')
-                        .setDescription('Set the Discord role granted when the Premium Role shop item is purchased.')
+                        .setDescription('Thiết lập role được cấp khi mua vật phẩm Premium Role.')
                         .addRoleOption(option =>
                             option
                                 .setName('role')
-                                .setDescription('The role to grant for Premium Role purchases.')
+                                .setDescription('Role sẽ được cấp khi mua vật phẩm Premium Role.')
                                 .setRequired(true),
                         ),
                 ),
@@ -46,13 +46,13 @@ export default {
             }
 
             return InteractionHelper.safeReply(interaction, {
-                embeds: [errorEmbed('Error', 'Unknown subcommand.')],
+                embeds: [errorEmbed('Lỗi', 'Lệnh con không xác định.')],
                 flags: MessageFlags.Ephemeral,
             });
         } catch (error) {
             logger.error('shop command error:', error);
             await InteractionHelper.safeReply(interaction, {
-                content: '❌ An error occurred while running the shop command.',
+                content: '❌ Đã xảy ra lỗi khi thực thi lệnh cửa hàng.',
                 flags: MessageFlags.Ephemeral,
             }).catch(() => {});
         }

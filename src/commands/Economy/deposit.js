@@ -8,11 +8,11 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('deposit')
-        .setDescription('Deposit money from your wallet into your bank')
+        .setDescription('Gửi tiền từ ví vào ngân hàng')
         .addStringOption(option =>
             option
                 .setName('amount')
-                .setDescription('Amount to deposit (number or "all")')
+                .setDescription('Số tiền muốn gửi (số cụ thể hoặc "all")')
                 .setRequired(true)
         ),
 
@@ -21,124 +21,118 @@ export default {
         if (!deferred) return;
         
         const userId = interaction.user.id;
-            const guildId = interaction.guildId;
-            const amountInput = interaction.options.getString("amount");
+        const guildId = interaction.guildId;
+        const amountInput = interaction.options.getString("amount");
 
-            const userData = await getEconomyData(client, guildId, userId);
-            
-            if (!userData) {
+        const userData = await getEconomyData(client, guildId, userId);
+        
+        if (!userData) {
+            throw createError(
+                "Failed to load economy data",
+                ErrorTypes.DATABASE,
+                "Không thể tải dữ liệu kinh tế của bạn. Vui lòng thử lại sau.",
+                { userId, guildId }
+            );
+        }
+        
+        const maxBank = getMaxBankCapacity(userData);
+        let depositAmount;
+
+        if (amountInput.toLowerCase() === "all") {
+            depositAmount = userData.wallet;
+        } else {
+            depositAmount = parseInt(amountInput);
+
+            if (isNaN(depositAmount) || depositAmount <= 0) {
                 throw createError(
-                    "Failed to load economy data",
-                    ErrorTypes.DATABASE,
-                    "Failed to load your economy data. Please try again later.",
-                    { userId, guildId }
-                );
-            }
-            
-            const maxBank = getMaxBankCapacity(userData);
-            let depositAmount;
-
-            if (amountInput.toLowerCase() === "all") {
-                depositAmount = userData.wallet;
-            } else {
-                depositAmount = parseInt(amountInput);
-
-                if (isNaN(depositAmount) || depositAmount <= 0) {
-                    throw createError(
-                        "Invalid deposit amount",
-                        ErrorTypes.VALIDATION,
-                        `Please enter a valid number or 'all'. You entered: \`${amountInput}\``,
-                        { amountInput, userId }
-                    );
-                }
-            }
-
-            if (depositAmount === 0) {
-                throw createError(
-                    "Zero deposit amount",
+                    "Invalid deposit amount",
                     ErrorTypes.VALIDATION,
-                    "You have no cash to deposit.",
-                    { userId, walletBalance: userData.wallet }
+                    `Vui lòng nhập một con số hợp lệ hoặc 'all'. Bạn đã nhập: \`${amountInput}\``,
+                    { amountInput, userId }
                 );
             }
+        }
 
-            if (depositAmount > userData.wallet) {
-                depositAmount = userData.wallet;
+        if (depositAmount === 0) {
+            throw createError(
+                "Zero deposit amount",
+                ErrorTypes.VALIDATION,
+                "Bạn không có tiền mặt để gửi vào ngân hàng.",
+                { userId, walletBalance: userData.wallet }
+            );
+        }
+
+        if (depositAmount > userData.wallet) {
+            depositAmount = userData.wallet;
+            await interaction.followUp({
+                embeds: [
+                    MessageTemplates.ERRORS.INVALID_INPUT(
+                        "số tiền gửi",
+                        `Bạn cố gắng gửi nhiều hơn số tiền bạn có. Hệ thống sẽ gửi toàn bộ số tiền còn lại của bạn: **$${depositAmount.toLocaleString()}**`
+                    )
+                ],
+                flags: ["Ephemeral"],
+            });
+        }
+
+        const availableSpace = maxBank - userData.bank;
+
+        if (availableSpace <= 0) {
+            throw createError(
+                "Bank is full",
+                ErrorTypes.VALIDATION,
+                `Ngân hàng của bạn đã đầy (Dung lượng tối đa: $${maxBank.toLocaleString()}). Hãy mua **Nâng cấp ngân hàng** để mở rộng hạn mức.`,
+                { maxBank, currentBank: userData.bank, userId }
+            );
+        }
+
+        if (depositAmount > availableSpace) {
+            depositAmount = availableSpace;
+
+            if (amountInput.toLowerCase() !== "all") {
                 await interaction.followUp({
                     embeds: [
                         MessageTemplates.ERRORS.INVALID_INPUT(
-                            "deposit amount",
-                            `You tried to deposit more than you have. Depositing your remaining cash: **$${depositAmount.toLocaleString()}**`
+                            "số tiền gửi",
+                            `Ngân hàng của bạn chỉ còn trống **$${depositAmount.toLocaleString()}** (Tối đa: $${maxBank.toLocaleString()}). Số tiền còn lại vẫn nằm trong ví của bạn.`
                         )
                     ],
                     flags: ["Ephemeral"],
                 });
             }
+        }
 
-            const availableSpace = maxBank - userData.bank;
+        if (depositAmount === 0) {
+            throw createError(
+                "No space or cash for deposit",
+                ErrorTypes.VALIDATION,
+                "Số tiền bạn muốn gửi là 0 hoặc đã vượt quá dung lượng ngân hàng.",
+                { depositAmount, availableSpace, walletBalance: userData.wallet }
+            );
+        }
 
-            if (availableSpace <= 0) {
-                throw createError(
-                    "Bank is full",
-                    ErrorTypes.VALIDATION,
-                    `Your bank is currently full (Max Capacity: $${maxBank.toLocaleString()}). Purchase a **Bank Upgrade** to increase your limit.`,
-                    { maxBank, currentBank: userData.bank, userId }
-                );
-            }
+        userData.wallet -= depositAmount;
+        userData.bank += depositAmount;
 
-            if (depositAmount > availableSpace) {
-                const originalDepositAmount = depositAmount;
-                depositAmount = availableSpace;
+        await setEconomyData(client, guildId, userId, userData);
 
-                if (amountInput.toLowerCase() !== "all") {
-                    await interaction.followUp({
-                        embeds: [
-                            MessageTemplates.ERRORS.INVALID_INPUT(
-                                "deposit amount",
-                                `You only had space for **$${depositAmount.toLocaleString()}** in your bank account (Max: $${maxBank.toLocaleString()}). The rest remains in your cash.`
-                            )
-                        ],
-                        flags: ["Ephemeral"],
-                    });
-                }
-            }
+        const embed = MessageTemplates.SUCCESS.DATA_UPDATED(
+            "gửi tiền",
+            `Bạn đã gửi thành công **$${depositAmount.toLocaleString()}** vào ngân hàng.`
+        )
+            .addFields(
+                {
+                    name: "💵 Số dư tiền mặt mới",
+                    value: `$${userData.wallet.toLocaleString()}`,
+                    inline: true,
+                },
+                {
+                    name: "🏦 Số dư ngân hàng mới",
+                    value: `$${userData.bank.toLocaleString()} / $${maxBank.toLocaleString()}`,
+                    inline: true,
+                },
+            );
 
-            if (depositAmount === 0) {
-                throw createError(
-                    "No space or cash for deposit",
-                    ErrorTypes.VALIDATION,
-                    "The amount you tried to deposit was either 0 or exceeded your bank capacity after checking your cash balance.",
-                    { depositAmount, availableSpace, walletBalance: userData.wallet }
-                );
-            }
-
-            userData.wallet -= depositAmount;
-            userData.bank += depositAmount;
-
-            await setEconomyData(client, guildId, userId, userData);
-
-            const embed = MessageTemplates.SUCCESS.DATA_UPDATED(
-                "deposit",
-                `You successfully deposited **$${depositAmount.toLocaleString()}** into your bank.`
-            )
-                .addFields(
-                    {
-                        name: "💵 New Cash Balance",
-                        value: `$${userData.wallet.toLocaleString()}`,
-                        inline: true,
-                    },
-                    {
-                        name: "🏦 New Bank Balance",
-                        value: `$${userData.bank.toLocaleString()} / $${maxBank.toLocaleString()}`,
-                        inline: true,
-                    },
-                );
-
-            await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
+        await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }, { command: 'deposit' })
 };
-
-
-
-
-

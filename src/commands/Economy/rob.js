@@ -13,11 +13,11 @@ const FINE_PERCENTAGE = 0.1;
 export default {
     data: new SlashCommandBuilder()
         .setName('rob')
-        .setDescription('Attempt to rob another user (very risky)')
+        .setDescription('Cố gắng cướp tiền của người dùng khác (rất rủi ro)')
         .addUserOption(option =>
             option
                 .setName('user')
-                .setDescription('User to rob')
+                .setDescription('Người dùng muốn cướp')
                 .setRequired(true)
         ),
 
@@ -34,7 +34,7 @@ export default {
                 throw createError(
                     "Cannot rob self",
                     ErrorTypes.VALIDATION,
-                    "You cannot rob yourself.",
+                    "Bạn không thể tự cướp chính mình.",
                     { robberId, victimId: victimUser.id }
                 );
             }
@@ -43,7 +43,7 @@ export default {
                 throw createError(
                     "Cannot rob bot",
                     ErrorTypes.VALIDATION,
-                    "You cannot rob a bot.",
+                    "Bạn không thể cướp một con bot.",
                     { victimId: victimUser.id, isBot: true }
                 );
             }
@@ -55,7 +55,7 @@ export default {
                 throw createError(
                     "Failed to load economy data",
                     ErrorTypes.DATABASE,
-                    "Failed to load economy data. Please try again later.",
+                    "Không thể tải dữ liệu kinh tế. Vui lòng thử lại sau.",
                     { robberId: !!robberData, victimId: !!victimData, guildId }
                 );
             }
@@ -70,7 +70,7 @@ export default {
                 throw createError(
                     "Robbery cooldown active",
                     ErrorTypes.RATE_LIMIT,
-                    `You need to lay low. Wait **${hours}h ${minutes}m** before attempting another robbery.`,
+                    `Bạn cần phải trốn kỹ đã. Hãy đợi **${hours} giờ ${minutes} phút** trước khi thực hiện vụ cướp tiếp theo.`,
                     { remaining, hours, minutes, cooldownType: 'rob' }
                 );
             }
@@ -79,7 +79,7 @@ export default {
                 throw createError(
                     "Victim too poor",
                     ErrorTypes.VALIDATION,
-                    `${victimUser.username} is too poor. They need at least $500 cash to be worth robbing.`,
+                    `${victimUser.username} quá nghèo. Họ cần có ít nhất $500 trong ví để đáng bị cướp.`,
                     { victimWallet: victimData.wallet, required: 500 }
                 );
             }
@@ -93,8 +93,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         MessageTemplates.ERRORS.CONFIGURATION_REQUIRED(
-                            "robbery protection",
-                            `${victimUser.username} was prepared! Your attempt failed because they own a **Personal Safe**. You got away clean but didn't gain anything.`
+                            "bảo vệ khỏi cướp",
+                            `${victimUser.username} đã chuẩn bị trước! Vụ cướp của bạn thất bại vì họ sở hữu **Két sắt cá nhân (Personal Safe)**. Bạn đã thoát thân an toàn nhưng không lấy được gì cả.`
                         )
                     ],
                 });
@@ -110,8 +110,8 @@ export default {
                 victimData.wallet = (victimData.wallet || 0) - amountStolen;
 
                 resultEmbed = MessageTemplates.SUCCESS.DATA_UPDATED(
-                    "robbery",
-                    `You successfully stole **$${amountStolen.toLocaleString()}** from ${victimUser.username}!`
+                    "cướp thành công",
+                    `Bạn đã lấy trộm thành công **$${amountStolen.toLocaleString()}** từ ${victimUser.username}!`
                 );
             } else {
                 const fineAmount = Math.floor((robberData.wallet || 0) * FINE_PERCENTAGE);
@@ -123,8 +123,8 @@ export default {
                 }
 
                 resultEmbed = MessageTemplates.ERRORS.INSUFFICIENT_PERMISSIONS(
-                    "robbery failed",
-                    `You failed the robbery and were caught! You were fined **$${fineAmount.toLocaleString()}** of your own cash.`
+                    "cướp thất bại",
+                    `Bạn đã bị bắt quả tang khi đang cướp! Bạn bị phạt **$${fineAmount.toLocaleString()}** từ chính số tiền của mình.`
                 );
             }
 
@@ -136,21 +136,18 @@ export default {
             resultEmbed
                 .addFields(
                     {
-                        name: `Your New Cash (${interaction.user.username})`,
+                        name: `Số dư mới của bạn (${interaction.user.username})`,
                         value: `$${robberData.wallet.toLocaleString()}`,
                         inline: true,
                     },
                     {
-                        name: `Victim's New Cash (${victimUser.username})`,
+                        name: `Số dư mới của nạn nhân (${victimUser.username})`,
                         value: `$${victimData.wallet.toLocaleString()}`,
                         inline: true,
                     },
                 )
-                .setFooter({ text: `Next robbery available in 4 hours.` });
+                .setFooter({ text: `Lần cướp tiếp theo khả dụng sau 4 giờ.` });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [resultEmbed] });
     }, { command: 'rob' })
 };
-
-
-

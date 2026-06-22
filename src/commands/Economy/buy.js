@@ -12,17 +12,17 @@ const SHOP_ITEMS = shopItems;
 export default {
     data: new SlashCommandBuilder()
         .setName('buy')
-        .setDescription('Buy an item from the shop')
+        .setDescription('Mua vật phẩm từ cửa hàng')
         .addStringOption(option =>
             option
                 .setName('item_id')
-                .setDescription('ID of the item to buy')
+                .setDescription('ID của vật phẩm muốn mua')
                 .setRequired(true)
         )
         .addIntegerOption(option =>
             option
                 .setName('quantity')
-                .setDescription('Quantity to buy (default: 1)')
+                .setDescription('Số lượng muốn mua (mặc định: 1)')
                 .setRequired(false)
                 .setMinValue(1)
                 .setMaxValue(10)
@@ -43,7 +43,7 @@ export default {
                 throw createError(
                     `Item ${itemId} not found`,
                     ErrorTypes.VALIDATION,
-                    `The item ID \`${itemId}\` does not exist in the shop.`,
+                    `ID vật phẩm \`${itemId}\` không tồn tại trong cửa hàng.`,
                     { itemId }
                 );
             }
@@ -52,7 +52,7 @@ export default {
                 throw createError(
                     "Invalid quantity",
                     ErrorTypes.VALIDATION,
-                    "You must purchase a quantity of 1 or more.",
+                    "Bạn phải mua số lượng từ 1 trở lên.",
                     { quantity }
                 );
             }
@@ -68,7 +68,7 @@ export default {
                 throw createError(
                     "Insufficient funds",
                     ErrorTypes.VALIDATION,
-                    `You need **$${totalCost.toLocaleString()}** to purchase ${quantity}x **${item.name}**, but you only have **$${userData.wallet.toLocaleString()}** in cash.`,
+                    `Bạn cần **$${totalCost.toLocaleString()}** để mua ${quantity}x **${item.name}**, nhưng bạn chỉ có **$${userData.wallet.toLocaleString()}** tiền mặt.`,
                     { required: totalCost, current: userData.wallet, itemId, quantity }
                 );
             }
@@ -78,7 +78,7 @@ export default {
                     throw createError(
                         "Premium role not configured",
                         ErrorTypes.CONFIGURATION,
-                        "The **Premium Shop Role** has not been configured by a server administrator yet.",
+                        "Role cao cấp (Premium) chưa được quản trị viên thiết lập.",
                         { itemId }
                     );
                 }
@@ -86,7 +86,7 @@ export default {
                     throw createError(
                         "Role already owned",
                         ErrorTypes.VALIDATION,
-                        `You already have the **${item.name}** role.`,
+                        `Bạn đã sở hữu role **${item.name}** rồi.`,
                         { itemId, roleId: PREMIUM_ROLE_ID }
                     );
                 }
@@ -94,7 +94,7 @@ export default {
                     throw createError(
                         "Invalid quantity for role",
                         ErrorTypes.VALIDATION,
-                        `You can only purchase the **${item.name}** role once.`,
+                        `Bạn chỉ có thể mua role **${item.name}** một lần duy nhất.`,
                         { itemId, quantity }
                     );
                 }
@@ -102,7 +102,7 @@ export default {
 
             userData.wallet -= totalCost;
 
-            let successDescription = `You successfully purchased ${quantity}x **${item.name}** for **$${totalCost.toLocaleString()}**!`;
+            let successDescription = `Bạn đã mua thành công ${quantity}x **${item.name}** với giá **$${totalCost.toLocaleString()}**!`;
 
             if (item.type === "role" && itemId === "premium_role") {
                 const member = interaction.member;
@@ -113,7 +113,7 @@ export default {
                     throw createError(
                         "Role not found",
                         ErrorTypes.CONFIGURATION,
-                        "The configured premium role no longer exists in this guild.",
+                        "Role premium đã cấu hình không còn tồn tại trong máy chủ.",
                         { roleId: PREMIUM_ROLE_ID }
                     );
                 }
@@ -121,22 +121,22 @@ export default {
                 try {
                     await member.roles.add(
                         role,
-                        `Purchased role: ${item.name}`,
+                        `Đã mua role: ${item.name}`,
                     );
-                    successDescription += `\n\n**👑 The role ${role.toString()} has been granted to you!**`;
+                    successDescription += `\n\n**👑 Role ${role.toString()} đã được cấp cho bạn!**`;
                 } catch (roleError) {
                     userData.wallet += totalCost;
                     await setEconomyData(client, guildId, userId, userData);
                     throw createError(
                         "Role assignment failed",
                         ErrorTypes.DISCORD_API,
-                        "Successfully deducted money, but failed to grant the role. Your cash has been refunded.",
+                        "Đã trừ tiền thành công, nhưng không thể cấp role cho bạn. Số tiền của bạn đã được hoàn lại.",
                         { roleId: PREMIUM_ROLE_ID, originalError: roleError.message }
                     );
                 }
             } else if (item.type === "upgrade") {
                 userData.upgrades[itemId] = true;
-                successDescription += `\n\n**✨ Your upgrade is now active!**`;
+                successDescription += `\n\n**✨ Bản nâng cấp của bạn đã được kích hoạt!**`;
             } else if (item.type === "consumable") {
                 userData.inventory[itemId] =
                     (userData.inventory[itemId] || 0) + quantity;
@@ -145,10 +145,10 @@ export default {
             await setEconomyData(client, guildId, userId, userData);
 
             const embed = successEmbed(
-                "💰 Purchase Successful",
+                "💰 Mua Hàng Thành Công",
                 successDescription,
             ).addFields({
-                name: "New Balance",
+                name: "Số dư mới",
                 value: `$${userData.wallet.toLocaleString()}`,
                 inline: true,
             });
@@ -156,8 +156,3 @@ export default {
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: [MessageFlags.Ephemeral] });
     }, { command: 'buy' })
 };
-
-
-
-
-
