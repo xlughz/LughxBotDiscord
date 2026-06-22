@@ -10,26 +10,25 @@ import { updateTicketPriority } from '../../services/ticket.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("priority")
-        .setDescription("Sets the priority level for the current support ticket.")
+        .setDescription("Thiết lập mức độ ưu tiên cho vé hỗ trợ hiện tại.")
         .addStringOption((option) =>
             option
                 .setName("level")
-                .setDescription("The priority level for the ticket.")
+                .setDescription("Mức độ ưu tiên của vé.")
                 .setRequired(true)
                 .addChoices(
-                    { name: "🔴 Urgent", value: "urgent" },
-                    { name: "🟠 High", value: "high" },
-                    { name: "🟡 Medium", value: "medium" },
-                    { name: "🟢 Low", value: "low" },
-                    { name: "⚪ None", value: "none" },
+                    { name: "🔴 Khẩn cấp (Urgent)", value: "urgent" },
+                    { name: "🟠 Cao (High)", value: "high" },
+                    { name: "🟡 Trung bình (Medium)", value: "medium" },
+                    { name: "🟢 Thấp (Low)", value: "low" },
+                    { name: "⚪ Không có (None)", value: "none" },
                 ),
-            )
+        )
         .setDMPermission(false),
     category: "Ticket",
 
     async execute(interaction, guildConfig, client) {
         try {
-            
             const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
             if (!deferred) {
                 return;
@@ -40,8 +39,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Not a Ticket Channel",
-                            "This command can only be used in a valid ticket channel.",
+                            "Không phải kênh vé",
+                            "Lệnh này chỉ có thể được sử dụng trong một kênh vé hợp lệ.",
                         ),
                     ],
                 });
@@ -51,8 +50,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Permission Denied",
-                            "You need the `Manage Channels` permission or the configured `Ticket Staff Role` to change ticket priority.",
+                            "Từ chối quyền truy cập",
+                            "Bạn cần quyền `Quản lý kênh` hoặc `Vai trò nhân viên hỗ trợ` được cấu hình để thay đổi mức độ ưu tiên.",
                         ),
                     ],
                 });
@@ -62,7 +61,7 @@ export default {
             const result = await updateTicketPriority(interaction.channel, priorityLevel, interaction.user);
             
             if (!result.success) {
-                logger.warn('Priority update failed - not a valid ticket channel', {
+                logger.warn('Cập nhật độ ưu tiên thất bại - không phải kênh vé hợp lệ', {
                     userId: interaction.user.id,
                     channelId: interaction.channel.id,
                     guildId: interaction.guildId,
@@ -71,8 +70,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Not a Ticket Channel",
-                            result.error || "This command can only be used in a valid ticket channel.",
+                            "Không phải kênh vé",
+                            result.error || "Lệnh này chỉ có thể được sử dụng trong một kênh vé hợp lệ.",
                         ),
                     ],
                 });
@@ -81,13 +80,13 @@ export default {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        "Priority Updated",
-                        `Ticket priority set to **${priorityLevel.toUpperCase()}**.`,
+                        "Đã cập nhật mức độ ưu tiên",
+                        `Mức độ ưu tiên của vé đã được đặt thành **${priorityLevel.toUpperCase()}**.`,
                     ),
                 ],
             });
 
-            logger.info('Ticket priority updated successfully', {
+            logger.info('Mức độ ưu tiên của vé đã được cập nhật thành công', {
                 userId: interaction.user.id,
                 userTag: interaction.user.tag,
                 channelId: interaction.channel.id,
@@ -98,7 +97,7 @@ export default {
             });
 
         } catch (error) {
-            logger.error('Error executing priority command', {
+            logger.error('Lỗi khi thực thi lệnh priority', {
                 error: error.message,
                 stack: error.stack,
                 userId: interaction.user.id,
@@ -113,7 +112,3 @@ export default {
         }
     },
 };
-
-
-
-

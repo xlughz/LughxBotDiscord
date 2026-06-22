@@ -1,26 +1,26 @@
 import { getColor } from '../../config/bot.js';
-import { SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags } from 'discord.js';
-import { errorEmbed, successEmbed } from '../../utils/embeds.js';
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ChannelType } from 'discord.js';
+import { createEmbed, errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getTicketPermissionContext } from '../../utils/ticketPermissions.js';
 import { closeTicket } from '../../services/ticket.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("close")
-        .setDescription("Closes the current ticket.")
+        .setDescription("Đóng vé hỗ trợ (ticket) hiện tại.")
         .setDMPermission(false)
         .addStringOption((option) =>
             option
                 .setName("reason")
-                .setDescription("The reason for closing the ticket.")
+                .setDescription("Lý do đóng vé.")
                 .setRequired(false),
         ),
 
     async execute(interaction, guildConfig, client) {
         try {
-            
             const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
             if (!deferred) {
                 return;
@@ -31,8 +31,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Not a Ticket Channel",
-                            "This command can only be used in a valid ticket channel.",
+                            "Không phải kênh vé",
+                            "Lệnh này chỉ có thể được sử dụng trong một kênh vé hợp lệ.",
                         ),
                     ],
                 });
@@ -42,8 +42,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Permission Denied",
-                            "You need the `Manage Channels` permission, the configured `Ticket Staff Role`, or be the ticket creator to close this ticket.",
+                            "Từ chối quyền truy cập",
+                            "Bạn cần quyền `Quản lý kênh`, `Vai trò nhân viên hỗ trợ` hoặc là người tạo vé để đóng vé này.",
                         ),
                     ],
                 });
@@ -52,12 +52,12 @@ export default {
             const channel = interaction.channel;
             const reason =
                 interaction.options?.getString("reason") ||
-                "Closed via command without a specific reason.";
+                "Đóng qua lệnh mà không có lý do cụ thể.";
 
             const result = await closeTicket(channel, interaction.user, reason);
             
             if (!result.success) {
-                logger.warn('Ticket close failed - not a valid ticket channel', {
+                logger.warn('Đóng vé thất bại - không phải kênh vé hợp lệ', {
                     userId: interaction.user.id,
                     channelId: channel.id,
                     guildId: interaction.guildId,
@@ -66,8 +66,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         errorEmbed(
-                            "Not a Ticket Channel",
-                            result.error || "This command can only be used in a valid ticket channel.",
+                            "Không phải kênh vé",
+                            result.error || "Lệnh này chỉ có thể được sử dụng trong một kênh vé hợp lệ.",
                         ),
                     ],
                 });
@@ -76,13 +76,13 @@ export default {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        "Ticket Closed!",
-                        "This ticket has been closed successfully.",
+                        "Đã đóng vé!",
+                        "Vé này đã được đóng thành công.",
                     ),
                 ],
             });
 
-            logger.info('Ticket closed successfully', {
+            logger.info('Vé đã được đóng thành công', {
                 userId: interaction.user.id,
                 userTag: interaction.user.tag,
                 channelId: channel.id,
@@ -93,7 +93,7 @@ export default {
             });
 
         } catch (error) {
-            logger.error('Error executing close command', {
+            logger.error('Lỗi khi thực thi lệnh close', {
                 error: error.message,
                 stack: error.stack,
                 userId: interaction.user.id,
@@ -108,6 +108,3 @@ export default {
         }
     },
 };
-
-
-
