@@ -1,30 +1,25 @@
 import { getColor } from '../../../config/bot.js';
-import { PermissionFlagsBits } from 'discord.js';
-import { createEmbed, errorEmbed } from '../../../utils/embeds.js';
+import { PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { createEmbed, errorEmbed, successEmbed } from '../../../utils/embeds.js';
 import { getServerCounters, saveServerCounters, getCounterEmoji as getCounterTypeEmoji, getCounterTypeLabel, getGuildCounterStats } from '../../../services/serverstatsService.js';
 import { logger } from '../../../utils/logger.js';
-
-
-
-
-
-
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+
 export async function handleList(interaction, client) {
     const guild = interaction.guild;
     
-    // Defer reply immediately to ensure interaction is acknowledged
+    // Defer phản hồi ngay lập tức để xác nhận tương tác
     try {
         await InteractionHelper.safeDefer(interaction);
     } catch (error) {
-        logger.error("Failed to defer reply:", error);
+        logger.error("Không thể defer phản hồi:", error);
         return;
     }
     
-    // Check permissions after deferring
+    // Kiểm tra quyền sau khi defer
     if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
         await InteractionHelper.safeEditReply(interaction, { 
-            embeds: [errorEmbed("You need **Manage Channels** permission to view counters.")]
+            embeds: [errorEmbed("Bạn cần quyền **Quản lý kênh** để xem các bộ đếm.")]
         }).catch(logger.error);
         return;
     }
@@ -33,7 +28,7 @@ export async function handleList(interaction, client) {
         const counters = await getServerCounters(client, guild.id);
         const stats = await getGuildCounterStats(guild);
 
-        // Clean up counters with deleted channels
+        // Dọn dẹp các bộ đếm bị mất kênh
         const validCounters = [];
         const orphanedCounters = [];
         
@@ -43,37 +38,37 @@ export async function handleList(interaction, client) {
                 validCounters.push(counter);
             } else {
                 orphanedCounters.push(counter);
-                logger.info(`Removing orphaned counter ${counter.id} (type: ${counter.type}, deleted channel: ${counter.channelId}) from guild ${guild.id}`);
+                logger.info(`Đang xóa bộ đếm mồ côi ${counter.id} (loại: ${counter.type}, kênh đã xóa: ${counter.channelId}) khỏi máy chủ ${guild.id}`);
             }
         }
         
-        // Save cleaned counters if any were orphaned
+        // Lưu lại danh sách bộ đếm đã được dọn dẹp
         if (orphanedCounters.length > 0) {
             await saveServerCounters(client, guild.id, validCounters);
-            logger.info(`Cleaned up ${orphanedCounters.length} orphaned counter(s) from guild ${guild.id}`);
+            logger.info(`Đã dọn dẹp ${orphanedCounters.length} bộ đếm mồ côi khỏi máy chủ ${guild.id}`);
         }
 
         if (validCounters.length === 0) {
             const embed = createEmbed({
-                title: "📋 Server Counters",
-                description: "No counters have been set up for this server yet.\n\nUse `/counter create` to set up your first counter!",
+                title: "📋 Bộ đếm của máy chủ",
+                description: "Chưa có bộ đếm nào được thiết lập cho máy chủ này.\n\nSử dụng `/counter create` để tạo bộ đếm đầu tiên!",
                 color: getColor('warning')
             });
 
             embed.addFields({
-                name: "🔧 **Available Counter Types**",
-                value: "👥 **Members + Bots** - Total server members\n👤 **Members Only** - Human members only\n🤖 **Bots Only** - Bot members only",
+                name: "🔧 **Các loại bộ đếm khả dụng**",
+                value: "👥 **Thành viên + Bot** - Tổng số thành viên\n👤 **Chỉ thành viên** - Chỉ người dùng thật\n🤖 **Chỉ Bot** - Chỉ các tài khoản bot",
                 inline: false
             });
 
             embed.addFields({
-                name: "📝 **Usage Examples**",
-                value: "`/counter create type:members channel_type:voice category:Stats`\n`/counter create type:bots channel_type:text category:Server Info`\n`/counter list`",
+                name: "📝 **Ví dụ sử dụng**",
+                value: "`/counter create type:members channel_type:voice category:Thống kê`\n`/counter create type:bots channel_type:text category:Thông tin`\n`/counter list`",
                 inline: false
             });
 
             embed.setFooter({ 
-                text: "Counter System • Automatic updates every 15 minutes" 
+                text: "Hệ thống bộ đếm • Tự động cập nhật mỗi 15 phút" 
             });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] }).catch(logger.error);
@@ -81,8 +76,8 @@ export async function handleList(interaction, client) {
         }
 
         const embed = createEmbed({
-            title: `📋 Server Counters (${validCounters.length})`,
-            description: "Here are all the active counters for this server.\n\nCounters automatically update every 15 minutes.",
+            title: `📋 Bộ đếm của máy chủ (${validCounters.length})`,
+            description: "Dưới đây là tất cả các bộ đếm đang hoạt động.\n\nBộ đếm sẽ tự động cập nhật mỗi 15 phút.",
             color: getColor('info')
         });
 
@@ -90,75 +85,51 @@ export async function handleList(interaction, client) {
             const counter = validCounters[i];
             const channel = guild.channels.cache.get(counter.channelId);
             
-            if (!channel) {
-                // This should not happen since we filtered above, but keep as safety check
-                logger.warn(`Counter ${counter.id} still has missing channel after cleanup`);
-                continue;
-            }
+            if (!channel) continue;
 
             const currentCount = getCurrentCount(stats, counter.type);
-            const status = channel.name.includes(':') ? '✅ Active' : '⚠️ Not Updated';
+            const status = channel.name.includes(':') ? '✅ Đang hoạt động' : '⚠️ Chưa cập nhật';
             
             embed.addFields({
-                name: `${getCounterTypeEmoji(counter.type)} Counter #${i + 1} - ${channel.name}`,
-                value: `**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}\n**Channel:** ${channel}\n**Current Count:** ${currentCount}\n**Status:** ${status}\n**Created:** ${new Date(counter.createdAt).toLocaleDateString()}`,
+                name: `${getCounterTypeEmoji(counter.type)} Bộ đếm #${i + 1} - ${channel.name}`,
+                value: `**ID:** \`${counter.id}\`\n**Loại:** ${getCounterTypeDisplay(counter.type)}\n**Kênh:** ${channel}\n**Số lượng hiện tại:** ${currentCount}\n**Trạng thái:** ${status}\n**Ngày tạo:** ${new Date(counter.createdAt).toLocaleDateString()}`,
                 inline: false
             });
         }
 
         embed.addFields({
-            name: "📊 **Statistics**",
-            value: `**Total Counters:** ${validCounters.length}\n**Active Counters:** ${validCounters.filter(c => {
+            name: "📊 **Thống kê**",
+            value: `**Tổng số bộ đếm:** ${validCounters.length}\n**Đang hoạt động:** ${validCounters.filter(c => {
                 const channel = guild.channels.cache.get(c.channelId);
                 return channel && channel.name.includes(':');
-            }).length}\n**Next Update:** <t:${Math.floor(Date.now() / 1000) + 900}:R>`,
+            }).length}\n**Cập nhật lần sau:** <t:${Math.floor(Date.now() / 1000) + 900}:R>`,
             inline: false
         });
 
         embed.addFields({
-            name: "🔧 **Management Commands**",
-            value: "`/counter create` - Create new counter\n`/counter update` - Update existing counter\n`/counter delete` - Delete counter",
+            name: "🔧 **Lệnh quản lý**",
+            value: "`/counter create` - Tạo bộ đếm mới\n`/counter update` - Cập nhật bộ đếm hiện có\n`/counter delete` - Xóa bộ đếm",
             inline: false
         });
 
         embed.setFooter({ 
-            text: "Counter System • Automatic updates every 15 minutes" 
+            text: "Hệ thống bộ đếm • Tự động cập nhật mỗi 15 phút" 
         });
         embed.setTimestamp();
 
         await InteractionHelper.safeEditReply(interaction, { embeds: [embed] }).catch(logger.error);
 
     } catch (error) {
-        logger.error("Error displaying counters:", error);
+        logger.error("Lỗi khi hiển thị bộ đếm:", error);
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [errorEmbed("An error occurred while fetching counters. Please try again.")]
+            embeds: [errorEmbed("Đã xảy ra lỗi khi truy xuất bộ đếm. Vui lòng thử lại.")]
         }).catch(logger.error);
     }
 }
 
-
-
-
-
-
 function getCounterTypeDisplay(type) {
     return `${getCounterTypeEmoji(type)} ${getCounterTypeLabel(type)}`;
 }
-
-
-
-
-
-
-function getCounterEmoji(type) {
-    return getCounterTypeEmoji(type);
-}
-
-
-
-
-
-
 
 function getCurrentCount(stats, type) {
     switch (type) {
@@ -172,6 +143,3 @@ function getCurrentCount(stats, type) {
             return 0;
     }
 }
-
-
-

@@ -1,48 +1,49 @@
-import { getColor } from '../../config/bot.js';
+import { getColor } from '../../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ChannelType } from 'discord.js';
-import { createEmbed, errorEmbed, successEmbed } from '../../utils/embeds.js';
-import { logger } from '../../utils/logger.js';
+import { createEmbed, errorEmbed, successEmbed } from '../../../utils/embeds.js';
+import { logger } from '../../../utils/logger.js';
 
 import { handleCreate } from './modules/serverstats_create.js';
 import { handleList } from './modules/serverstats_list.js';
 import { handleUpdate } from './modules/serverstats_update.js';
 import { handleDelete } from './modules/serverstats_delete.js';
 
-import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { InteractionHelper } from '../../../utils/interactionHelper.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("serverstats")
-        .setDescription("Manage server statistics that track member counts and channel data")
+        .setDescription("Quản lý thống kê máy chủ (theo dõi số lượng thành viên và kênh)")
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
         .addSubcommand(subcommand =>
             subcommand
                 .setName("create")
-                .setDescription("Create a new statistics tracker channel in a category")
+                .setDescription("Tạo kênh theo dõi thống kê mới trong một danh mục")
                 .addStringOption(option =>
                     option
                         .setName("type")
-                        .setDescription("The type of statistics to track")
+                        .setDescription("Loại thống kê cần theo dõi")
                         .setRequired(true)
                         .addChoices(
-                            { name: "members + bots", value: "members" },
-                            { name: "members only", value: "members_only" },
-                            { name: "bots only", value: "bots" }
+                            { name: "Tổng thành viên + bot", value: "members" },
+                            { name: "Chỉ thành viên", value: "members_only" },
+                            { name: "Chỉ bot", value: "bots" }
                         )
                 )
                 .addStringOption(option =>
                     option
                         .setName("channel_type")
-                        .setDescription("The channel type to create for this tracker")
+                        .setDescription("Loại kênh sẽ tạo cho bộ theo dõi này")
                         .setRequired(true)
                         .addChoices(
-                            { name: "voice channel (recommended)", value: "voice" },
-                            { name: "text channel", value: "text" }
+                            { name: "Kênh thoại (khuyên dùng)", value: "voice" },
+                            { name: "Kênh văn bản", value: "text" }
                         )
                 )
                 .addChannelOption(option =>
                     option
                         .setName("category")
-                        .setDescription("The category where the statistics tracker channel will be created")
+                        .setDescription("Danh mục nơi kênh thống kê sẽ được tạo")
                         .setRequired(true)
                         .addChannelTypes(ChannelType.GuildCategory)
                 )
@@ -50,38 +51,38 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("list")
-                .setDescription("List all statistics trackers for this server")
+                .setDescription("Liệt kê tất cả các bộ theo dõi thống kê cho máy chủ này")
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("update")
-                .setDescription("Update an existing statistics tracker")
+                .setDescription("Cập nhật một bộ theo dõi thống kê hiện có")
                 .addStringOption(option =>
                     option
                         .setName("counter-id")
-                        .setDescription("The ID of the tracker to update")
+                        .setDescription("ID của bộ theo dõi cần cập nhật")
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option
                         .setName("type")
-                        .setDescription("The new tracker type")
+                        .setDescription("Loại theo dõi mới")
                         .setRequired(false)
                         .addChoices(
-                            { name: "members + bots", value: "members" },
-                            { name: "members only", value: "members_only" },
-                            { name: "bots only", value: "bots" }
+                            { name: "Tổng thành viên + bot", value: "members" },
+                            { name: "Chỉ thành viên", value: "members_only" },
+                            { name: "Chỉ bot", value: "bots" }
                         )
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("delete")
-                .setDescription("Delete an existing statistics tracker")
+                .setDescription("Xóa một bộ theo dõi thống kê hiện có")
                 .addStringOption(option =>
                     option
                         .setName("counter-id")
-                        .setDescription("The ID of the tracker to delete")
+                        .setDescription("ID của bộ theo dõi cần xóa")
                         .setRequired(true)
                 )
         ),
@@ -105,16 +106,16 @@ export default {
                     break;
                 default:
                     await InteractionHelper.safeReply(interaction, {
-                        embeds: [errorEmbed("Unknown subcommand.")],
+                        embeds: [errorEmbed("Lệnh con không xác định.")],
                         flags: MessageFlags.Ephemeral
                     });
             }
         } catch (error) {
-            logger.error(`Error in serverstats ${subcommand}:`, error);
+            logger.error(`Lỗi trong lệnh serverstats ${subcommand}:`, error);
             
             const errorEmbedMsg = createEmbed({ 
-                title: "❌ Error", 
-                description: "An error occurred while processing your request.",
+                title: "❌ Lỗi", 
+                description: "Đã xảy ra lỗi khi xử lý yêu cầu của bạn.",
                 color: getColor('error')
             });
 
@@ -126,7 +127,3 @@ export default {
         }
     }
 };
-
-
-
-
